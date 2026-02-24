@@ -2,5 +2,5 @@
 builder = "nixpacks"
 
 [deploy]
-startCommand = "./cacao"
+startCommand = "go run ."
 restartPolicyType = "on_failure"
