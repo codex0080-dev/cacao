@@ -1,0 +1,1933 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+
+<!-- PWA -->
+<link rel="manifest" href="/static/manifest.json">
+<meta name="theme-color" content="#2C1810">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Cacao">
+<link rel="apple-touch-icon" href="/static/icon-192.png">
+<meta name="description" content="Ton journal de dégustations chocolat &amp; pâtisserie">
+<title>Cacao</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,400&family=Instrument+Sans:wght@400;500;600&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
+
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --cacao:#2C1810;--cacao-md:#4A2C1A;--cacao-lt:#7A4528;
+  --caramel:#C4843A;--caramel-dk:#A86828;
+  --cream:#FBF6EF;--cream-dk:#EDE4D7;--cream-md:#E2D5C3;
+  --muted:#7A6248;--white:#FFFFFF;--text:#1C0F08;
+  --shadow:0 8px 32px rgba(44,24,16,.10);
+  --shadow-lg:0 16px 48px rgba(44,24,16,.16);
+  --radius:14px;
+  --tap:44px;
+}
+body{background:var(--cream);color:var(--text);font-family:'Instrument Sans',sans-serif;min-height:100vh;-webkit-font-smoothing:antialiased;}
+a{color:inherit;}
+button{font:inherit;}
+body.modal-open{overflow:hidden;}
+
+/* ── NAV ── */
+nav{
+  position:fixed;top:0;left:0;right:0;z-index:100;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 16px;height:60px;
+  padding-top:env(safe-area-inset-top);
+  background:rgba(251,246,239,.96);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+  border-bottom:1px solid var(--cream-dk);
+}
+.nav-left{display:flex;align-items:center;gap:10px;}
+.logo{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:600;color:var(--cacao);display:flex;align-items:center;gap:10px;}
+.logo-dot{width:8px;height:8px;border-radius:50%;background:var(--caramel);animation:pulse 2.4s ease-in-out infinite;}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.4);opacity:.7}}
+
+.nav-actions{display:flex;align-items:center;gap:8px;}
+.btn-primary{
+  display:flex;align-items:center;gap:6px;
+  padding:0 18px;height:var(--tap);min-width:var(--tap);
+  background:var(--cacao);color:var(--cream);border:none;border-radius:10px;
+  font-size:14px;font-weight:600;cursor:pointer;transition:all .2s;white-space:nowrap;
+}
+.btn-primary:hover{background:var(--cacao-md);}
+.btn-primary:active{transform:scale(.97);}
+.btn-ghost{
+  display:flex;align-items:center;gap:6px;
+  padding:0 14px;height:var(--tap);min-width:var(--tap);
+  background:transparent;border:1.5px solid var(--cream-dk);border-radius:10px;
+  font-size:13px;color:var(--muted);cursor:pointer;transition:all .2s;text-decoration:none;
+  white-space:nowrap;
+}
+.btn-ghost:hover{border-color:var(--caramel);color:var(--caramel);}
+
+/* ── LAYOUT ── */
+.layout{padding-top:60px;display:grid;grid-template-columns:256px 1fr;min-height:100vh;}
+aside{
+  background:var(--white);border-right:1px solid var(--cream-dk);
+  padding:22px 16px;position:sticky;top:60px;height:calc(100vh - 60px);
+  overflow-y:auto;display:flex;flex-direction:column;gap:22px;
+}
+.sidebar-label{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-bottom:10px;}
+.stat-block{display:flex;gap:24px;}
+.stat-num{font-family:'Cormorant Garamond',serif;font-size:36px;font-weight:300;color:var(--cacao);line-height:1;}
+.stat-lbl{font-size:11px;color:var(--muted);margin-top:2px;}
+
+.search-wrap{position:relative;}
+.search-wrap input{
+  width:100%;height:var(--tap);padding:0 12px 0 36px;
+  border:1.5px solid var(--cream-dk);border-radius:10px;
+  background:var(--cream);font-size:14px;color:var(--text);
+  outline:none;transition:border-color .2s;
+}
+.search-wrap input::placeholder{color:var(--muted);}
+.search-wrap input:focus{border-color:var(--caramel);}
+.search-icon{position:absolute;left:11px;top:50%;transform:translateY(-50%);font-size:15px;color:var(--muted);pointer-events:none;}
+
+.chips{display:flex;flex-wrap:wrap;gap:6px;}
+.chip{
+  padding:0 14px;height:36px;display:flex;align-items:center;
+  border-radius:20px;border:1.5px solid var(--cream-dk);
+  background:transparent;font-size:13px;color:var(--muted);cursor:pointer;transition:all .15s;
+}
+.chip.active,.chip:hover{border-color:var(--caramel);background:rgba(196,132,58,.08);color:var(--caramel);}
+
+main{padding:24px 20px;display:flex;flex-direction:column;gap:18px;}
+.main-title{font-family:'Cormorant Garamond',serif;font-size:30px;font-weight:300;color:var(--cacao);}
+.main-title em{font-style:italic;color:var(--caramel);}
+
+/* ── CARDS ── */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px;}
+.card{
+  background:var(--white);border-radius:var(--radius);overflow:hidden;
+  border:1px solid rgba(44,24,16,.07);
+  cursor:pointer;transition:all .22s;animation:fadeUp .4s ease both;
+}
+.card:focus{outline:3px solid rgba(196,132,58,.5);outline-offset:2px;}
+.card:hover{transform:translateY(-3px);box-shadow:var(--shadow-lg);}
+.card:active{transform:scale(.99);}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+
+.card-photo{height:130px;display:flex;align-items:center;justify-content:center;font-size:44px;position:relative;overflow:hidden;}
+.card-badge{
+  position:absolute;top:10px;right:10px;padding:4px 9px;
+  border-radius:6px;font-family:'DM Mono',monospace;font-size:10px;
+}
+.badge-deep{background:var(--cacao);color:var(--cream);}
+.badge-quick{background:rgba(251,246,239,.93);color:var(--cacao-md);}
+.card-score{
+  position:absolute;bottom:10px;left:10px;
+  background:rgba(251,246,239,.95);backdrop-filter:blur(8px);
+  border-radius:8px;padding:3px 10px;
+  display:flex;align-items:baseline;gap:2px;
+  border:1px solid rgba(44,24,16,.08);
+}
+.score-n{font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:600;line-height:1;color:var(--cacao);}
+.score-d{font-size:9px;color:var(--muted);font-family:'DM Mono',monospace;}
+
+.card-body{padding:14px 16px;}
+.card-name{font-family:'Cormorant Garamond',serif;font-size:19px;color:var(--cacao);margin-bottom:2px;line-height:1.2;}
+.card-maker{font-size:12px;color:var(--muted);margin-bottom:8px;}
+.card-aromas{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px;}
+.aroma-tag{padding:3px 9px;background:var(--cream);border-radius:6px;font-size:11px;color:var(--cacao-lt);font-family:'DM Mono',monospace;}
+.card-notes{font-size:13px;color:var(--muted);margin-bottom:8px;font-style:italic;line-height:1.45;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+.card-meta{display:flex;justify-content:space-between;align-items:center;padding-top:10px;border-top:1px solid var(--cream-dk);}
+.card-city{font-size:11px;color:var(--muted);}
+.card-date{font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);}
+
+.empty{text-align:center;padding:80px 20px;color:var(--muted);}
+.empty-icon{font-size:48px;margin-bottom:16px;opacity:.4;}
+.empty p{font-family:'Cormorant Garamond',serif;font-size:20px;font-style:italic;}
+
+/* ── AROMA BUTTONS ── */
+.aroma-btn{
+  padding:6px 13px;height:34px;
+  border-radius:20px;border:1.5px solid var(--cream-dk);background:var(--white);
+  font-size:13px;color:var(--cacao-md);cursor:pointer;transition:all .15s;
+}
+.aroma-btn.sel{border-color:var(--caramel);background:rgba(196,132,58,.1);color:var(--caramel);}
+
+/* ── MODALS ── */
+.overlay{
+  position:fixed;inset:0;z-index:300;background:rgba(28,15,8,.55);
+  backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+  display:flex;align-items:flex-end;justify-content:center;
+  opacity:0;pointer-events:none;transition:opacity .25s;
+}
+.overlay.open{opacity:1;pointer-events:all;}
+.modal{
+  width:100%;max-width:560px;background:var(--white);
+  border-radius:20px 20px 0 0;
+  padding:20px 20px calc(20px + env(safe-area-inset-bottom));
+  transform:translateY(100%);transition:transform .35s cubic-bezier(.4,0,.2,1);
+  max-height:92vh;overflow-y:auto;box-shadow:0 -8px 40px rgba(44,24,16,.18);
+}
+.overlay.open .modal{transform:translateY(0);}
+.modal-handle{width:40px;height:4px;background:var(--cream-md);border-radius:2px;margin:0 auto 18px;}
+.modal-title{font-family:'Cormorant Garamond',serif;font-size:23px;color:var(--cacao);margin-bottom:14px;}
+
+.mode-toggle{display:flex;border:1.5px solid var(--cream-dk);border-radius:10px;overflow:hidden;margin-bottom:16px;}
+.mode-btn{flex:1;padding:0;height:var(--tap);border:none;background:transparent;font-size:13px;cursor:pointer;color:var(--muted);transition:all .2s;}
+.mode-btn.active{background:var(--cacao);color:var(--cream);font-weight:600;}
+
+/* Champs */
+.field{margin-bottom:14px;}
+.field label{display:block;font-family:'DM Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:6px;}
+.field input,.field textarea,.field select{
+  width:100%;height:var(--tap);padding:0 14px;
+  border:1.5px solid var(--cream-dk);border-radius:10px;background:var(--cream);
+  font-size:15px;color:var(--text);outline:none;transition:border-color .2s;
+}
+.field textarea{height:auto;padding:12px 14px;resize:none;}
+.field input::placeholder,.field textarea::placeholder{color:var(--muted);}
+.field input:focus,.field textarea:focus,.field select:focus{border-color:var(--caramel);background:var(--white);}
+
+/* Score */
+.score-row{display:flex;align-items:center;gap:14px;}
+.score-row input[type=range]{
+  flex:1;-webkit-appearance:none;height:5px;
+  background:linear-gradient(to right,var(--caramel) var(--pct,60%),var(--cream-dk) var(--pct,60%));
+  border-radius:3px;outline:none;padding:0;border:none;cursor:pointer;
+}
+.score-row input[type=range]::-webkit-slider-thumb{
+  -webkit-appearance:none;width:24px;height:24px;border-radius:50%;
+  background:var(--caramel);cursor:pointer;
+  box-shadow:0 2px 8px rgba(196,132,58,.5);
+  border:2px solid var(--white);
+}
+.score-val{font-family:'Cormorant Garamond',serif;font-size:32px;font-weight:300;color:var(--cacao);min-width:44px;text-align:right;}
+
+/* Boutons actions */
+.btn-save{
+  width:100%;height:52px;background:var(--cacao);color:var(--cream);
+  border:none;border-radius:12px;font-size:16px;font-weight:600;
+  cursor:pointer;margin-top:14px;transition:all .2s;
+}
+.btn-save:hover{background:var(--cacao-md);}
+.btn-save:active{transform:scale(.98);}
+.btn-cancel{
+  background:none;border:none;color:var(--muted);font-size:14px;
+  cursor:pointer;display:block;margin:14px auto 0;
+  padding:8px 20px;min-height:40px;
+}
+
+/* Mode rapide simplifié */
+.quick-essentials{display:flex;flex-direction:column;gap:14px;}
+.quick-more{margin-top:4px;}
+.quick-more-toggle{
+  width:100%;height:var(--tap);background:transparent;border:1.5px dashed var(--cream-dk);
+  border-radius:10px;font-size:13px;color:var(--muted);cursor:pointer;transition:all .2s;
+  display:flex;align-items:center;justify-content:center;gap:6px;
+}
+.quick-more-toggle:hover{border-color:var(--caramel);color:var(--caramel);}
+.quick-extra{display:none;padding-top:14px;flex-direction:column;gap:14px;}
+.quick-extra.open{display:flex;}
+
+/* DETAIL SHEET */
+.det-hero{height:160px;border-radius:12px;overflow:hidden;background:linear-gradient(135deg,#2a1209,#6b3020);position:relative;margin-bottom:14px;}
+.det-hero img{width:100%;height:100%;object-fit:cover;position:absolute;inset:0;}
+.det-pill-row{display:flex;gap:7px;flex-wrap:wrap;margin:10px 0 14px;}
+.pill{display:inline-flex;align-items:center;gap:7px;padding:6px 12px;border-radius:999px;border:1px solid var(--cream-dk);background:var(--cream);color:var(--muted);font-size:12px;}
+.pill strong{font-weight:600;color:var(--cacao);}
+.det-title{font-family:'Cormorant Garamond',serif;font-size:27px;color:var(--cacao);line-height:1.15;margin-bottom:6px;}
+.det-sub{color:var(--muted);font-size:14px;margin-bottom:10px;}
+.det-notes{background:var(--cream);border:1px solid var(--cream-dk);border-radius:12px;padding:14px;font-size:14px;color:var(--cacao-md);line-height:1.6;}
+.det-notes em{color:var(--muted);}
+.det-actions{display:flex;gap:10px;margin-top:14px;}
+.det-actions .btn-ghost{flex:1;justify-content:center;}
+.btn-danger{
+  flex:1;display:flex;justify-content:center;align-items:center;gap:6px;
+  height:var(--tap);border-radius:10px;border:1.5px solid rgba(160,0,0,.2);
+  background:rgba(160,0,0,.05);color:#8b1a1a;cursor:pointer;transition:all .2s;font-size:13px;
+}
+.btn-danger:hover{background:rgba(160,0,0,.10);}
+
+/* Collections sidebar */
+.coll-link{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:9px 12px;border-radius:10px;background:var(--cream);
+  font-size:13px;color:var(--cacao-md);border:1.5px solid var(--cream-dk);
+  text-decoration:none;transition:all .18s;cursor:pointer;
+}
+.coll-link:hover{
+  border-color:var(--caramel);background:rgba(196,132,58,.06);
+  color:var(--cacao);transform:translateX(2px);
+}
+.coll-link-count{
+  font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);
+  padding:2px 8px;border-radius:10px;background:var(--cream-md);
+  flex-shrink:0;
+}
+
+/* ── FAB + DRAWER ── */
+.fab{
+  position:fixed;right:16px;bottom:16px;z-index:120;
+  width:56px;height:56px;border-radius:50%;
+  background:var(--cacao);color:var(--cream);border:none;cursor:pointer;
+  box-shadow:0 6px 24px rgba(44,24,16,.3);
+  display:none;align-items:center;justify-content:center;font-size:26px;
+  transition:all .2s;
+  margin-bottom:env(safe-area-inset-bottom);
+}
+.fab:active{transform:scale(.94);}
+.drawer{position:fixed;inset:60px 0 0 0;z-index:250;display:none;background:rgba(28,15,8,.4);backdrop-filter:blur(4px);}
+.drawer.open{display:block;}
+.drawer-panel{width:min(340px,88vw);height:100%;background:var(--white);border-right:1px solid var(--cream-dk);padding:20px 16px;overflow:auto;}
+
+@media (max-width: 900px){
+  .layout{grid-template-columns:1fr;}
+  aside{display:none;}
+  main{padding:20px 14px;}
+  nav{padding:0 12px;}
+  .btn-primary{display:none;}
+  .fab{display:flex;}
+  .grid{grid-template-columns:1fr;}
+  .card-photo{height:110px;}
+}
+@media (min-width: 600px) and (max-width: 900px){
+  .grid{grid-template-columns:repeat(2,1fr);}
+}
+.hidden{display:none !important;}
+
+/* ── AUTOCOMPLETE ── */
+.autocomplete-wrap{position:relative;}
+.autocomplete-list{
+  position:absolute;top:calc(100% + 4px);left:0;right:0;z-index:200;
+  background:var(--white);border:1.5px solid var(--caramel);border-radius:10px;
+  box-shadow:var(--shadow-lg);overflow:hidden;
+}
+.autocomplete-item{
+  padding:10px 14px;font-size:14px;cursor:pointer;color:var(--text);
+  border-bottom:1px solid var(--cream-dk);transition:background .12s;
+}
+.autocomplete-item:last-child{border-bottom:none;}
+.autocomplete-item:hover,.autocomplete-item.focused{background:var(--cream);}
+
+/* ── TIMELINE ── */
+.timeline{display:flex;flex-direction:column;gap:28px;}
+.timeline-month{border-left:2px solid var(--cream-dk);padding-left:20px;position:relative;}
+.timeline-month-label{
+  position:absolute;left:-1px;top:0;
+  font-family:'DM Mono',monospace;font-size:10px;text-transform:uppercase;
+  letter-spacing:.1em;color:var(--caramel);
+  background:var(--cream);padding:0 8px 0 0;
+  transform:translateX(-100%);white-space:nowrap;
+}
+.timeline-cards{display:flex;flex-direction:column;gap:10px;}
+.timeline-card{
+  display:flex;gap:14px;align-items:flex-start;
+  background:var(--white);border-radius:12px;padding:12px 14px;
+  border:1px solid rgba(44,24,16,.07);
+  cursor:pointer;transition:all .2s;
+}
+.timeline-card:hover{box-shadow:var(--shadow);transform:translateX(3px);}
+.timeline-card-thumb{
+  width:56px;height:56px;border-radius:8px;flex-shrink:0;
+  background:linear-gradient(135deg,#2a1209,#6b3020);
+  display:flex;align-items:center;justify-content:center;font-size:22px;
+  overflow:hidden;position:relative;
+}
+.timeline-card-thumb img{width:100%;height:100%;object-fit:cover;position:absolute;inset:0;}
+.timeline-card-body{flex:1;min-width:0;}
+.timeline-card-name{font-family:'Cormorant Garamond',serif;font-size:17px;color:var(--cacao);line-height:1.2;}
+.timeline-card-meta{display:flex;gap:8px;align-items:center;margin-top:4px;flex-wrap:wrap;}
+.timeline-card-score{
+  font-family:'DM Mono',monospace;font-size:11px;font-weight:600;
+  color:var(--caramel);background:rgba(196,132,58,.1);
+  padding:2px 7px;border-radius:6px;
+}
+.timeline-card-city{font-size:11px;color:var(--muted);}
+.timeline-card-aromas{display:flex;flex-wrap:wrap;gap:4px;margin-top:5px;}
+
+.chip.aroma-active{border-color:var(--caramel);background:rgba(196,132,58,.12);color:var(--caramel);}
+
+@media(max-width:900px){
+  .timeline-month-label{
+    position:static;transform:none;
+    display:block;margin-bottom:10px;padding:0;
+    font-size:10px;color:var(--caramel);
+  }
+  .timeline-month{padding-left:14px;}
+}
+/* ── BARRE NAV MOBILE ── */
+.bottom-nav{
+  display:none;
+  position:fixed;
+  bottom:0; left:0; right:0;
+  z-index:220;
+  background:rgba(251,246,239,.97);
+  backdrop-filter:blur(16px);
+  -webkit-backdrop-filter:blur(16px);
+  border-top:1px solid var(--cream-dk);
+  padding-bottom:env(safe-area-inset-bottom);
+  grid-template-columns:repeat(4,1fr);
+}
+
+.bottom-nav-item{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:3px;
+  padding:10px 4px 8px;
+  font-size:10px;
+  font-weight:500;
+  color:var(--muted);
+  text-decoration:none;
+  background:none;
+  border:none;
+  cursor:pointer;
+  font-family:'Instrument Sans',sans-serif;
+  transition:color .15s;
+  -webkit-tap-highlight-color:transparent;
+}
+.bottom-nav-item .nav-icon{font-size:20px;}
+.bottom-nav-item.active{color:var(--cacao);}
+.bottom-nav-add{color:var(--caramel);font-weight:600;}
+.bottom-nav-add .nav-icon{
+  background:var(--cacao);
+  color:var(--cream);
+  width:36px;height:36px;
+  border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:22px;
+  box-shadow:0 3px 12px rgba(44,24,16,.25);
+}
+
+@media (max-width:900px){
+
+  .bottom-nav{display:grid;}
+
+  main{
+    padding-bottom:calc(84px + env(safe-area-inset-bottom)) !important;
+  }
+
+  #navBtnMap,
+  #navBtnFilters,
+  #navBtnAdd{
+    display:none !important;
+  }
+
+  .fab{
+    display:none !important;
+  }
+}
+
+</style>
+</head>
+
+<body>
+<nav>
+  <div class="nav-left">
+    <div class="logo"><div class="logo-dot"></div>Cacao</div>
+  </div>
+
+  <div class="nav-actions">
+    <a class="btn-ghost" id="navBtnMap" href="/map">🗺️ Carte</a>
+    <button class="btn-ghost" id="navBtnFilters" onclick="openFilters()">☰ Filtres</button>
+    <button class="btn-primary" id="navBtnAdd" onclick="openModal()">+ Dégustation</button>
+  </div>
+</nav>
+
+<button class="fab" onclick="openModal()">+</button>
+
+
+<!-- Drawer mobile filtres -->
+<div class="drawer" id="drawer" onclick="if(event.target===this) closeFilters()">
+  <div class="drawer-panel">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+      <div class="sidebar-label" style="margin:0">Filtres</div>
+      <button class="btn-ghost" type="button" onclick="closeFilters()" style="padding:6px 10px;">✕</button>
+    </div>
+
+    <div style="margin-bottom:18px;">
+      <div class="sidebar-label">Recherche</div>
+      <div class="search-wrap">
+        <span class="search-icon">⌕</span>
+        <input type="text" id="searchInputMobile" placeholder="Chocolat, boutique, ville…" oninput="mirrorSearch(this.value)">
+      </div>
+    </div>
+
+    <div style="margin-bottom:18px;">
+      <div class="sidebar-label">Note minimum</div>
+      <div class="chips" data-filter-group="score">
+        <button class="chip active" type="button" data-filter="score" data-value="0" onclick="setFilter('score','0',this)">Toutes</button>
+        <button class="chip" type="button" data-filter="score" data-value="7" onclick="setFilter('score','7',this)">≥ 7</button>
+        <button class="chip" type="button" data-filter="score" data-value="8" onclick="setFilter('score','8',this)">≥ 8</button>
+        <button class="chip" type="button" data-filter="score" data-value="9" onclick="setFilter('score','9',this)">≥ 9</button>
+      </div>
+    </div>
+
+    <div style="margin-bottom:18px;">
+      <div class="sidebar-label">Mode</div>
+      <div class="chips" id="modeChipsMob" data-filter-group="mode">
+        <button class="chip active" type="button" data-filter="mode" data-value="" onclick="setFilter('mode','',this)">Toutes</button>
+        <button class="chip" type="button" data-filter="mode" data-value="quick" onclick="setFilter('mode','quick',this)">⚡ Rapide</button>
+        <button class="chip" type="button" data-filter="mode" data-value="deep" onclick="setFilter('mode','deep',this)">🔬 Approfondie</button>
+      </div>
+    </div>
+
+    <div style="margin-bottom:18px;">
+      <div class="sidebar-label">Arôme</div>
+      <div id="aromaFilterMob" style="display:flex;flex-wrap:wrap;gap:5px;">
+        {{range .Aromas}}
+        <button class="chip" type="button"
+          onclick="setAromaFilter('{{.Name}}',this)"
+          style="font-size:11px;padding:0 10px;height:30px;">{{.Name}}</button>
+        {{end}}
+      </div>
+    </div>
+
+    <div style="margin-bottom:18px;">
+      <div class="sidebar-label">Vue</div>
+      <div class="chips" data-filter-group="view">
+        <button class="chip active" type="button" data-filter="view" data-value="grid" onclick="setView('grid',this)">▦ Grille</button>
+        <button class="chip" type="button" data-filter="view" data-value="timeline" onclick="setView('timeline',this)">↕ Chronologie</button>
+      </div>
+    </div>
+
+    <div style="margin-bottom:18px;">
+      <div class="sidebar-label">Ma bibliothèque</div>
+      <div class="stat-block">
+        <div>
+          <div class="stat-num" id="statCountMobile">{{len .Tastings}}</div>
+          <div class="stat-lbl">dégustations</div>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="sidebar-label">Collections</div>
+      <div style="display:flex;flex-direction:column;gap:6px;">
+        {{range .Collections}}
+        <a class="coll-link" href="/collections/view?id={{.ID}}">
+          <span>{{.Emoji}} {{.Name}}</span>
+          <span class="coll-link-count">{{.Count}}</span>
+        </a>
+        {{end}}
+        <button type="button" onclick="openOverlay('newCollOverlay')"
+          style="margin-top:6px;padding:10px 10px;border:1.5px dashed var(--cream-dk);border-radius:10px;background:transparent;font-size:12px;color:var(--caramel);cursor:pointer;text-align:left;">
+          + Nouvelle collection
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="layout">
+  <!-- Sidebar desktop -->
+  <aside>
+    <div>
+      <div class="sidebar-label">Recherche</div>
+      <div class="search-wrap">
+        <span class="search-icon">⌕</span>
+        <input type="text" id="searchInput" placeholder="Chocolat, boutique, ville…" oninput="filterCards()">
+      </div>
+    </div>
+
+    <div>
+      <div class="sidebar-label">Note minimum</div>
+      <div class="chips" data-filter-group="score">
+        <button class="chip active" type="button" data-filter="score" data-value="0" onclick="setFilter('score','0',this)">Toutes</button>
+        <button class="chip" type="button" data-filter="score" data-value="7" onclick="setFilter('score','7',this)">≥ 7</button>
+        <button class="chip" type="button" data-filter="score" data-value="8" onclick="setFilter('score','8',this)">≥ 8</button>
+        <button class="chip" type="button" data-filter="score" data-value="9" onclick="setFilter('score','9',this)">≥ 9</button>
+      </div>
+    </div>
+
+    <div>
+      <div class="sidebar-label">Mode</div>
+      <div class="chips" id="modeChipsDesk" data-filter-group="mode">
+        <button class="chip active" type="button" data-filter="mode" data-value="" onclick="setFilter('mode','',this)">Toutes</button>
+        <button class="chip" type="button" data-filter="mode" data-value="quick" onclick="setFilter('mode','quick',this)">⚡ Rapide</button>
+        <button class="chip" type="button" data-filter="mode" data-value="deep" onclick="setFilter('mode','deep',this)">🔬 Approfondie</button>
+      </div>
+    </div>
+
+    <div>
+      <div class="sidebar-label">Arôme</div>
+      <div id="aromaFilterDesk" style="display:flex;flex-wrap:wrap;gap:5px;">
+        {{range .Aromas}}
+        <button class="chip" type="button"
+          onclick="setAromaFilter('{{.Name}}',this)"
+          style="font-size:11px;padding:0 10px;height:30px;">{{.Name}}</button>
+        {{end}}
+      </div>
+    </div>
+
+    <div>
+      <div class="sidebar-label">Vue</div>
+      <div class="chips" data-filter-group="view">
+        <button class="chip active" id="viewGrid" type="button" data-filter="view" data-value="grid" onclick="setView('grid',this)">▦ Grille</button>
+        <button class="chip" id="viewTimeline" type="button" data-filter="view" data-value="timeline" onclick="setView('timeline',this)">↕ Chronologie</button>
+      </div>
+    </div>
+
+    <div>
+      <div class="sidebar-label">Ma bibliothèque</div>
+      <div class="stat-block">
+        <div>
+          <div class="stat-num" id="statCount">{{len .Tastings}}</div>
+          <div class="stat-lbl">dégustations</div>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="sidebar-label">Collections</div>
+      <div style="display:flex;flex-direction:column;gap:6px;">
+        {{range .Collections}}
+        <a class="coll-link" href="/collections/view?id={{.ID}}">
+          <span>{{.Emoji}} {{.Name}}</span>
+          <span class="coll-link-count">{{.Count}}</span>
+        </a>
+        {{end}}
+        <button type="button" onclick="openOverlay('newCollOverlay')"
+          style="margin-top:6px;padding:10px 10px;border:1.5px dashed var(--cream-dk);border-radius:10px;background:transparent;font-size:12px;color:var(--caramel);cursor:pointer;text-align:left;">
+          + Nouvelle collection
+        </button>
+      </div>
+    </div>
+  </aside>
+
+  <main>
+    <div class="main-title">Mes dégustations <em id="countLabel">/ {{len .Tastings}} entrées</em></div>
+
+    {{if .Tastings}}
+    <div class="grid" id="cardsGrid">
+      {{range .Tastings}}
+      <div class="card" role="button" tabindex="0"
+        data-name="{{.ProductName}}"
+        data-maker="{{.Maker}}"
+        data-city="{{.City}}"
+        data-score="{{.Score}}"
+        data-mode="{{.Mode}}"
+        data-id="{{.ID}}"
+        data-aromas="{{range $i,$a := .AromaNames}}{{if $i}},{{end}}{{$a}}{{end}}"
+        data-date="{{.CreatedAt.Format "2006-01"}}"
+        onclick="openDetail(this)"
+        onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openDetail(this)}">
+
+        <div class="card-photo" style="background:linear-gradient(135deg,#2a1209,#6b3020);">
+          {{if .PhotoURL}}
+            <img src="{{.PhotoURL}}" alt="Photo dégustation"
+                 style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0;pointer-events:none;">
+          {{else}}
+            🍫
+          {{end}}
+
+          <div class="card-badge {{if eq .Mode "deep"}}badge-deep{{else}}badge-quick{{end}}">
+            {{if eq .Mode "deep"}}Approfondie{{else}}Rapide{{end}}
+          </div>
+
+          {{if gt .Score 0.0}}
+          <div class="card-score">
+            <span class="score-n">{{fmtScore .Score}}</span>
+            <span class="score-d">/10</span>
+          </div>
+          {{end}}
+        </div>
+
+        <div class="card-body">
+          <div class="card-name">{{.ProductName}}</div>
+          {{if .Maker}}<div class="card-maker">{{.Maker}}</div>{{end}}
+
+          {{if .AromaNames}}
+          <div class="card-aromas">
+            {{range .AromaNames}}<span class="aroma-tag">{{.}}</span>{{end}}
+          </div>
+          {{end}}
+
+          {{if .Notes}}<div class="card-notes">{{.Notes}}</div>{{end}}
+
+          <div class="card-meta">
+            <span class="card-city">{{if .City}}📍 {{.City}}{{end}}</span>
+            <span class="card-date">{{.CreatedAt.Format "02 jan. 2006"}}</span>
+          </div>
+        </div>
+
+        <script type="application/json" class="card-data">
+{"id":"{{.ID | js}}",
+ "name":"{{.ProductName | js}}",
+ "maker":"{{.Maker | js}}",
+ "city":"{{.City | js}}",
+ "score":"{{fmtScore .Score | js}}",
+ "mode":"{{.Mode | js}}",
+ "notes":"{{.Notes | js}}",
+ "photo_url":"{{.PhotoURL | js}}",
+ "date":"{{.CreatedAt.Format "02 janvier 2006" | js}}",
+ "day":"{{.CreatedAt.Format "2006-01-02" | js}}",
+ "aromas":[{{range $i,$a := .AromaNames}}{{if $i}},{{end}}"{{ $a | js }}"{{end}}]
+}
+</script>
+      </div>
+      {{end}}
+    </div>
+
+    <!-- Vue chronologique -->
+    <div id="timelineView" style="display:none;"></div>
+
+    <div class="empty" id="emptyMsg" style="display:none;">
+      <div class="empty-icon">🔍</div>
+      <p>Aucune dégustation ne correspond aux filtres</p>
+    </div>
+    {{else}}
+    <div class="empty">
+      <div class="empty-icon">🍫</div>
+      <p>Ta bibliothèque est vide — ajoute ta première dégustation</p>
+    </div>
+    {{end}}
+  </main>
+</div>
+
+<!-- MODAL AJOUT -->
+<div class="overlay" id="overlay" role="dialog" aria-modal="true" aria-label="Ajouter une dégustation" onclick="closeModal(event)">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-handle"></div>
+
+    <div class="mode-toggle">
+      <button type="button" class="mode-btn active" onclick="setMode('quick', this)">⚡ Rapide</button>
+      <button type="button" class="mode-btn" onclick="setMode('deep', this)">🔬 Approfondie</button>
+    </div>
+
+    <!-- MODE RAPIDE -->
+    <div id="modeQuick">
+      <div class="modal-title">Nouvelle dégustation</div>
+      <form id="quickForm" method="POST" action="/add" enctype="multipart/form-data" onsubmit="prepareAromas()">
+        <input type="hidden" name="mode" value="quick">
+        <input type="hidden" name="latitude" id="latInput">
+        <input type="hidden" name="longitude" id="lngInput">
+
+        <div class="quick-essentials">
+          <div class="field" style="margin:0">
+            <label>Chocolat ou pâtisserie *</label>
+            <input type="text" name="product_name" placeholder="Ex : Tablette Pérou 68%…" required autofocus>
+          </div>
+
+          <div class="field" style="margin:0">
+            <label>Note — <span id="scoreLabel">7</span>/10</label>
+            <div class="score-row">
+              <input id="quickScore" type="range" min="1" max="10" step="0.1" value="7" name="score" oninput="updateScore(this,'scoreLabel','scoreVal')">
+              <div class="score-val" id="scoreVal">7</div>
+            </div>
+          </div>
+
+          <div class="field" style="margin:0">
+            <label>Photo <span style="color:var(--muted);font-size:10px;">(optionnel)</span></label>
+            <input type="file" name="photo" accept="image/*" capture="environment" style="height:auto;padding:10px 14px;">
+          </div>
+        </div>
+
+        <div class="quick-more" style="margin-top:14px;">
+          <button type="button" class="quick-more-toggle" id="quickMoreToggle" onclick="toggleQuickMore()">
+            <span id="quickMoreLabel">＋ Ajouter boutique, arômes, ville…</span>
+          </button>
+          <div class="quick-extra" id="quickExtra">
+            <div class="field" style="margin:0">
+              <label>Boutique · Maison</label>
+              <input type="text" name="maker" placeholder="Ex : Manufacture Ducasse…">
+            </div>
+
+            <div class="field" style="margin:0">
+              <label>Ville <span id="geoStatus" style="color:var(--caramel);font-size:10px;"></span></label>
+              <input type="text" name="city" id="cityInput" placeholder="Paris…">
+            </div>
+
+            <div class="field" style="margin:0">
+              <label>Lieu dégusté <span style="color:var(--muted);font-size:10px;">(recherche GPS)</span></label>
+              <input type="text" id="placeQuery" placeholder="Tape une ville ou une adresse…">
+              <div id="placeResults" style="margin-top:8px;display:flex;flex-direction:column;gap:6px;"></div>
+              <div style="margin-top:8px;font-size:12px;color:var(--muted);" id="placePickedQuick"></div>
+            </div>
+
+            <div style="display:flex;gap:8px;">
+              <button type="button" class="chip" onclick="useMyPosition()" style="height:var(--tap);flex:1;justify-content:center;">📍 Ma position</button>
+              <button type="button" class="chip" onclick="clearPosition()" style="height:var(--tap);flex:1;justify-content:center;">🧹 Effacer</button>
+            </div>
+
+            <div class="field" style="margin:0">
+              <label>Arômes perçus</label>
+              <div style="display:flex;flex-wrap:wrap;gap:6px;padding:12px;background:var(--cream);border-radius:12px;border:1px solid var(--cream-dk);">
+                {{range .Aromas}}
+                <button type="button" class="aroma-btn" data-id="{{.ID}}" onclick="toggleAroma(this,'quick')">{{.Name}}</button>
+                {{end}}
+              </div>
+            </div>
+
+            <div class="field" style="margin:0">
+              <label>Notes libres</label>
+              <textarea name="notes" rows="2" placeholder="Impressions rapides…"></textarea>
+            </div>
+          </div>
+        </div>
+
+        <button type="submit" class="btn-save" style="margin-top:20px;">Enregistrer</button>
+        <button type="button" class="btn-cancel" onclick="closeModalDirect()">Annuler</button>
+      </form>
+    </div>
+
+    <!-- MODE APPROFONDI -->
+    <div id="modeDeep" style="display:none;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+        <div class="modal-title" id="deepStepTitle">1 · Vue</div>
+        <div style="font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);" id="deepStepCount">1 / 6</div>
+      </div>
+
+      <div style="height:3px;background:var(--cream-dk);border-radius:2px;margin-bottom:18px;">
+        <div id="deepProgress" style="height:100%;background:var(--caramel);border-radius:2px;width:16%;transition:width .3s;"></div>
+      </div>
+
+      <form id="deepForm" method="POST" action="/add" enctype="multipart/form-data" onsubmit="prepareAromasDeep()">
+        <input type="hidden" name="mode" value="deep">
+        <input type="hidden" name="latitude" id="latInputDeep">
+        <input type="hidden" name="longitude" id="lngInputDeep">
+
+        <!-- STEP 1 -->
+        <div id="step1">
+          <div class="field" style="margin:0">
+            <label>Chocolat ou pâtisserie *</label>
+            <input type="text" name="product_name" placeholder="Ex : Tablette Madagascar 70%…" required>
+          </div>
+
+          <div class="field" style="margin-top:14px;">
+            <label>Boutique · Maison</label>
+            <input type="text" name="maker" placeholder="Ex : Aoki, Ducasse…">
+          </div>
+
+          <div class="field">
+            <label>Ville <span id="geoStatusDeep" style="color:var(--caramel);font-size:10px;"></span></label>
+            <input type="text" name="city" id="cityInputDeep" placeholder="Paris…">
+          </div>
+
+          <div class="field">
+            <label>Photo (optionnel)</label>
+            <input type="file" name="photo" accept="image/*" capture="environment" style="height:auto;padding:10px 14px;">
+          </div>
+
+          <div class="field">
+            <label>Vue (1 choix)</label>
+            <div style="display:flex;flex-wrap:wrap;gap:6px;">
+              <button type="button" class="aroma-btn" onclick="selectOne(this,'vue')">Brillante</button>
+              <button type="button" class="aroma-btn" onclick="selectOne(this,'vue')">Mate</button>
+              <button type="button" class="aroma-btn" onclick="selectOne(this,'vue')">Marbrée</button>
+              <button type="button" class="aroma-btn" onclick="selectOne(this,'vue')">Pleine</button>
+            </div>
+            <input type="hidden" name="vue" id="vueResult">
+          </div>
+        </div>
+
+        <!-- STEP 2 -->
+        <div id="step2" style="display:none;">
+          <div class="field">
+            <label>Cassant (multi)</label>
+            <div style="display:flex;flex-wrap:wrap;gap:6px;">
+              <button type="button" class="aroma-btn" onclick="toggleTag(this,'cassant')">Net</button>
+              <button type="button" class="aroma-btn" onclick="toggleTag(this,'cassant')">Sec</button>
+              <button type="button" class="aroma-btn" onclick="toggleTag(this,'cassant')">Mou</button>
+              <button type="button" class="aroma-btn" onclick="toggleTag(this,'cassant')">Friable</button>
+            </div>
+            <input type="hidden" name="cassant" id="cassantResult">
+          </div>
+
+          <div class="field">
+            <label>Texture (multi)</label>
+            <div style="display:flex;flex-wrap:wrap;gap:6px;">
+              <button type="button" class="aroma-btn" onclick="toggleTag(this,'texture')">Soyeuse</button>
+              <button type="button" class="aroma-btn" onclick="toggleTag(this,'texture')">Granuleuse</button>
+              <button type="button" class="aroma-btn" onclick="toggleTag(this,'texture')">Fondante</button>
+              <button type="button" class="aroma-btn" onclick="toggleTag(this,'texture')">Pâteuse</button>
+            </div>
+            <input type="hidden" name="texture" id="textureResult">
+          </div>
+        </div>
+
+        <!-- STEP 3 -->
+        <div id="step3" style="display:none;">
+          <div class="field">
+            <label>Arômes au nez</label>
+            <div id="aromaPickerNez" style="display:flex;flex-wrap:wrap;gap:6px;padding:12px;background:var(--cream);border-radius:12px;border:1px solid var(--cream-dk);">
+              {{range .Aromas}}
+              <button type="button" class="aroma-btn" data-id="{{.ID}}" onclick="toggleAroma(this,'nez')">{{.Name}}</button>
+              {{end}}
+            </div>
+          </div>
+        </div>
+
+        <!-- STEP 4 -->
+        <div id="step4" style="display:none;">
+          <div class="field">
+            <label>Arômes en bouche</label>
+            <div id="aromaPickerBouche" style="display:flex;flex-wrap:wrap;gap:6px;padding:12px;background:var(--cream);border-radius:12px;border:1px solid var(--cream-dk);">
+              {{range .Aromas}}
+              <button type="button" class="aroma-btn" data-id="{{.ID}}" onclick="toggleAroma(this,'bouche')">{{.Name}}</button>
+              {{end}}
+            </div>
+          </div>
+
+          <div class="field">
+            <label>Notes libres</label>
+            <textarea name="notes" rows="4" placeholder="Ressenti, évolution, surprises…"></textarea>
+          </div>
+        </div>
+
+        <!-- STEP 5 -->
+        <div id="step5" style="display:none;">
+          <div class="field">
+            <label>Longueur (1 choix)</label>
+            <div style="display:flex;flex-wrap:wrap;gap:6px;">
+              <button type="button" class="aroma-btn" onclick="selectOne(this,'longueur')">Courte</button>
+              <button type="button" class="aroma-btn" onclick="selectOne(this,'longueur')">Moyenne</button>
+              <button type="button" class="aroma-btn" onclick="selectOne(this,'longueur')">Longue</button>
+            </div>
+            <input type="hidden" name="longueur" id="longueurResult">
+          </div>
+
+          <div class="field">
+            <label>Résumé</label>
+            <div class="det-notes" id="deepSummary"><em>—</em></div>
+          </div>
+        </div>
+
+        <!-- STEP 6 -->
+        <div id="step6" style="display:none;">
+          <div class="field" style="margin:0">
+            <label>Note — <span id="deepScoreLabel">8</span>/10</label>
+            <div class="score-row">
+              <input id="deepScore" type="range" min="1" max="10" step="0.1" value="8" name="score"
+                     oninput="updateScore(this,'deepScoreLabel','deepScoreVal')">
+              <div class="score-val" id="deepScoreVal">8</div>
+            </div>
+          </div>
+        </div>
+
+        <div style="display:flex;gap:10px;margin-top:18px;">
+          <button type="button" id="btnPrev" onclick="prevStep()" style="display:none;padding:12px 20px;background:transparent;border:1.5px solid var(--cream-dk);border-radius:10px;font-size:13px;color:var(--muted);cursor:pointer;">← Retour</button>
+          <button type="button" id="btnNext" onclick="nextStep()" style="flex:1;padding:12px;background:var(--cacao);color:var(--cream);border:none;border-radius:10px;font-size:14px;cursor:pointer;">Suivant →</button>
+          <button type="submit" id="btnSubmit" class="btn-save" style="display:none;flex:1;margin-top:0;">Enregistrer</button>
+        </div>
+        <button type="button" class="btn-cancel" onclick="closeModalDirect()">Annuler</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- DETAIL SHEET -->
+<div class="overlay" id="detOverlay" role="dialog" aria-modal="true" aria-label="Détails dégustation" onclick="closeDetail(event)">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-handle"></div>
+
+    <div class="det-hero" id="detHero">
+      <img id="detPhoto" alt="" style="display:none">
+      <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:56px;color:rgba(253,250,246,.85);" id="detEmoji">🍫</div>
+    </div>
+
+    <div class="det-title" id="detName">—</div>
+    <div class="det-sub" id="detSub">—</div>
+
+    <div class="det-pill-row">
+      <span class="pill"><strong id="detScore">—</strong> /10</span>
+      <span class="pill" id="detMode">—</span>
+
+      <button type="button" class="pill" id="detCityPill" onclick="filterFromDetail('city')" style="cursor:pointer;">
+        📍 <span id="detCity">—</span>
+      </button>
+
+      <button type="button" class="pill" id="detDatePill" onclick="filterFromDetail('day')" style="cursor:pointer;">
+        🗓️ <span id="detDate">—</span>
+      </button>
+    </div>
+
+    <div class="field" style="margin-bottom:10px;">
+      <label>Arômes</label>
+      <div id="detAromas" style="display:flex;flex-wrap:wrap;gap:6px;"></div>
+      <div id="detAromasEmpty" style="font-size:12px;color:var(--muted);display:none;">—</div>
+    </div>
+
+    <div class="field" style="margin-bottom:10px;">
+      <label>Notes</label>
+      <div class="det-notes" id="detNotes"><em>—</em></div>
+    </div>
+
+    <div class="field" style="margin-bottom:10px;">
+      <label>Déjà dans</label>
+      <div id="detCollList" style="display:flex;flex-wrap:wrap;gap:6px;"></div>
+      <div id="detCollListEmpty" style="font-size:12px;color:var(--muted);display:none;">Aucune collection</div>
+    </div>
+
+    <div class="field" style="margin-bottom:10px;">
+      <label>Ajouter à une collection</label>
+      <input type="hidden" id="detTastingId">
+      <div style="display:flex;gap:10px;align-items:center;">
+        <select id="detCollSelect" style="flex:1;height:var(--tap);padding:0 12px;border:1.5px solid var(--cream-dk);border-radius:10px;background:var(--cream);color:var(--text);font-size:14px;font-family:inherit;outline:none;cursor:pointer;">
+          <option value="">Choisir une collection…</option>
+          {{range .Collections}}
+            <option value="{{.ID}}">{{.Emoji}} {{.Name}}</option>
+          {{end}}
+        </select>
+        <button type="button" class="btn-ghost" onclick="addToCollection()"
+                id="detCollBtn" style="padding:0 14px;justify-content:center;flex-shrink:0;">Ajouter</button>
+      </div>
+      <div id="detCollFeedback" style="margin-top:7px;font-size:12px;min-height:18px;"></div>
+    </div>
+
+    <div class="det-actions">
+      <a class="btn-ghost" id="detEditLink" href="#" style="text-align:center;">✏️ Modifier</a>
+      <form method="POST" action="/delete" style="flex:1" onsubmit="return confirm('Supprimer cette dégustation ?');">
+        <input type="hidden" name="id" id="detDeleteId">
+        <button type="submit" class="btn-danger">🗑️ Supprimer</button>
+      </form>
+    </div>
+
+    <button type="button" class="btn-cancel" onclick="closeDetailDirect()">Fermer</button>
+  </div>
+</div>
+
+<!-- MODAL NOUVELLE COLLECTION -->
+<div class="overlay" id="newCollOverlay" role="dialog" aria-modal="true" aria-label="Nouvelle collection" onclick="if(event.target===this) closeOverlay('newCollOverlay')">
+  <div class="modal" style="max-width:420px;" onclick="event.stopPropagation()">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Nouvelle collection</div>
+    <form method="POST" action="/collections/add">
+      <div class="field">
+        <label>Emoji</label>
+        <input type="text" name="emoji" value="📁" style="width:100px;">
+      </div>
+      <div class="field">
+        <label>Nom *</label>
+        <input type="text" name="name" placeholder="Ex : Coups de cœur, Barcelone…" required>
+      </div>
+      <button type="submit" class="btn-save">Créer la collection</button>
+      <button type="button" class="btn-cancel" onclick="closeOverlay('newCollOverlay')">Annuler</button>
+    </form>
+  </div>
+</div>
+
+<script>
+/* ─────────────────────────────────────────────
+   Utilitaires overlay (scroll lock + ESC)
+───────────────────────────────────────────── */
+const overlayIds = ['overlay','detOverlay','newCollOverlay'];
+
+function anyOverlayOpen(){
+  return overlayIds.some(id => document.getElementById(id)?.classList.contains('open'));
+}
+function syncBodyScrollLock(){
+  document.body.classList.toggle('modal-open', anyOverlayOpen() || document.getElementById('drawer')?.classList.contains('open'));
+}
+function openOverlay(id){
+  const el = document.getElementById(id);
+  if(!el) return;
+  el.classList.add('open');
+  syncBodyScrollLock();
+}
+function closeOverlay(id){
+  const el = document.getElementById(id);
+  if(!el) return;
+  el.classList.remove('open');
+  syncBodyScrollLock();
+}
+
+document.addEventListener('keydown', (e)=>{
+  if(e.key === 'Escape'){
+    if(document.getElementById('drawer')?.classList.contains('open')) return closeFilters();
+    if(document.getElementById('detOverlay')?.classList.contains('open')) return closeDetailDirect();
+    if(document.getElementById('overlay')?.classList.contains('open')) return closeModalDirect();
+    if(document.getElementById('newCollOverlay')?.classList.contains('open')) return closeOverlay('newCollOverlay');
+  }
+});
+
+/* ── Drawer mobile ── */
+function openFilters(){
+  document.getElementById('drawer').classList.add('open');
+  syncBodyScrollLock();
+}
+function closeFilters(){
+  document.getElementById('drawer').classList.remove('open');
+  syncBodyScrollLock();
+}
+
+function mirrorSearch(v){
+  const d = document.getElementById('searchInput');
+  if(d && d.value !== v) d.value = v;
+  filterCards();
+}
+
+/* ── MODAL AJOUT ── */
+function openModal(){
+  openOverlay('overlay');
+  bindPlaceAutocomplete();
+  bindProductAutocomplete();
+
+  const hasCoords = document.getElementById('latInput').value && document.getElementById('lngInput').value;
+  if(!hasCoords) geolocate('latInput','lngInput','cityInput','geoStatus');
+
+  const hasCoordsDeep = document.getElementById('latInputDeep').value && document.getElementById('lngInputDeep').value;
+  if(!hasCoordsDeep) geolocate('latInputDeep','lngInputDeep','cityInputDeep','geoStatusDeep');
+
+  const r = document.getElementById('quickScore');
+  if(r) updateScore(r,'scoreLabel','scoreVal');
+}
+
+/* Toggle champs optionnels mode rapide */
+function toggleQuickMore(){
+  const extra = document.getElementById('quickExtra');
+  const label = document.getElementById('quickMoreLabel');
+  const isOpen = extra.classList.contains('open');
+  extra.classList.toggle('open', !isOpen);
+  label.textContent = isOpen ? '＋ Ajouter boutique, arômes, ville…' : '－ Masquer les détails';
+}
+function closeModal(e){
+  if(e.target===document.getElementById('overlay')) closeModalDirect();
+}
+function closeModalDirect(){
+  closeOverlay('overlay');
+  currentStep = 1;
+  renderStep();
+}
+
+/* ── MODE TOGGLE ── */
+function setMode(m, btn){
+  document.querySelectorAll('.mode-btn').forEach(b=>b.classList.remove('active'));
+  if(btn) btn.classList.add('active');
+  document.getElementById('modeQuick').style.display = (m==='quick') ? '' : 'none';
+  document.getElementById('modeDeep').style.display  = (m==='deep')  ? '' : 'none';
+  if(m==='deep') initDeep();
+}
+
+/* ─────────────────────────────────────────────
+   AUTOCOMPLETE PRODUITS
+───────────────────────────────────────────── */
+let acTimer = null;
+let activeDay = '';      // filtre jour précis "YYYY-MM-DD"
+let lastDetail = null;   // dernière dégustation affichée
+
+function bindProductAutocomplete(){
+  ['quickForm','deepForm'].forEach(formId => {
+    const form = document.getElementById(formId);
+    if(!form) return;
+    const input = form.querySelector('input[name="product_name"]');
+    if(!input || input.dataset.acBound) return;
+    input.dataset.acBound = '1';
+
+    const wrap = document.createElement('div');
+    wrap.className = 'autocomplete-wrap';
+    input.parentNode.insertBefore(wrap, input);
+    wrap.appendChild(input);
+
+    const list = document.createElement('div');
+    list.className = 'autocomplete-list';
+    list.style.display = 'none';
+    wrap.appendChild(list);
+
+    let focusedIdx = -1;
+
+    input.addEventListener('input', () => {
+      clearTimeout(acTimer);
+      const q = input.value.trim();
+      if(q.length < 2){ list.style.display='none'; return; }
+      acTimer = setTimeout(() => fetchSuggestions(q, list, input), 250);
+    });
+
+    input.addEventListener('keydown', e => {
+      const items = list.querySelectorAll('.autocomplete-item');
+      if(e.key === 'ArrowDown'){ e.preventDefault(); focusedIdx = Math.min(focusedIdx+1, items.length-1); highlightAc(items, focusedIdx); }
+      else if(e.key === 'ArrowUp'){ e.preventDefault(); focusedIdx = Math.max(focusedIdx-1, 0); highlightAc(items, focusedIdx); }
+      else if(e.key === 'Enter' && focusedIdx >= 0){ e.preventDefault(); items[focusedIdx]?.click(); }
+      else if(e.key === 'Escape'){ list.style.display='none'; }
+      else { focusedIdx = -1; }
+    });
+
+    document.addEventListener('click', e => {
+      if(!wrap.contains(e.target)) list.style.display='none';
+    });
+  });
+}
+
+function highlightAc(items, idx){
+  items.forEach((it,i) => it.classList.toggle('focused', i===idx));
+}
+
+async function fetchSuggestions(q, list, input){
+  const data = await safeFetchJson('/api/products?q=' + encodeURIComponent(q));
+  list.innerHTML = '';
+  if(!data || !data.length){ list.style.display='none'; return; }
+  data.forEach(name => {
+    const item = document.createElement('div');
+    item.className = 'autocomplete-item';
+    item.textContent = name;
+    item.onclick = () => {
+      input.value = name;
+      list.style.display='none';
+    };
+    list.appendChild(item);
+  });
+  list.style.display = '';
+}
+const acCache = new Map();
+
+async function fetchSuggestions(q, list, input){
+  const key = q.toLowerCase();
+  if(acCache.has(key)){
+    renderSuggestions(acCache.get(key), list, input);
+    return;
+  }
+
+  const data = await safeFetchJson('/api/products?q=' + encodeURIComponent(q));
+  const arr = Array.isArray(data) ? data : [];
+  acCache.set(key, arr);
+  renderSuggestions(arr, list, input);
+}
+
+function renderSuggestions(data, list, input){
+  list.innerHTML = '';
+  if(!data || !data.length){ list.style.display='none'; return; }
+  data.forEach(item => {
+    const name = typeof item === 'string' ? item : (item?.name || '');
+    const maker = typeof item === 'string' ? '' : (item?.maker || '');
+    const label = maker ? `${name} — ${maker}` : name;
+
+    const el = document.createElement('div');
+    el.className = 'autocomplete-item';
+    el.textContent = label;
+    el.onclick = () => {
+      input.value = name;          // on remplit juste le nom
+      list.style.display = 'none';
+    };
+    list.appendChild(el);
+  });
+  list.style.display = '';
+}
+/* ─────────────────────────────────────────────
+   GÉO — via proxy backend (Nominatim caché)
+───────────────────────────────────────────── */
+let placeTimer = null;
+
+function setCoords(lat, lng, label){
+  document.getElementById('latInput').value = lat;
+  document.getElementById('lngInput').value = lng;
+  const cityInput = document.getElementById('cityInput');
+  if(cityInput && !cityInput.value && label) cityInput.value = label.split(',')[0].trim();
+  const picked = document.getElementById('placePickedQuick');
+  if(picked) picked.textContent = label ? `📌 Position choisie : ${label}` : `📌 Position choisie`;
+}
+
+function clearPosition(){
+  document.getElementById('latInput').value = '';
+  document.getElementById('lngInput').value = '';
+  const picked = document.getElementById('placePickedQuick');
+  if(picked) picked.textContent = '';
+  const results = document.getElementById('placeResults');
+  if(results) results.innerHTML = '';
+  const q = document.getElementById('placeQuery');
+  if(q) q.value = '';
+}
+
+async function safeFetchJson(url){
+  try{
+    const r = await fetch(url, { headers: { 'Accept':'application/json' } });
+    if(!r.ok) return null;
+    return await r.json();
+  }catch(_){ return null; }
+}
+
+async function searchPlace(q){
+  const results = document.getElementById('placeResults');
+  if(!results) return;
+  results.innerHTML = '';
+  if(!q || q.length < 3) return;
+
+  const data = await safeFetchJson('/api/geo/search?q=' + encodeURIComponent(q));
+
+  if(!data || !Array.isArray(data) || !data.length){
+    const hint = document.createElement('div');
+    hint.style.cssText = 'font-size:12px;color:var(--muted);';
+    hint.textContent = "Aucun résultat.";
+    results.appendChild(hint);
+    return;
+  }
+
+  data.forEach(item => {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'chip';
+    btn.style.textAlign = 'left';
+    btn.textContent = item.display_name;
+    btn.onclick = () => {
+      setCoords(parseFloat(item.lat), parseFloat(item.lon), item.display_name);
+      results.innerHTML = '';
+    };
+    results.appendChild(btn);
+  });
+}
+
+function bindPlaceAutocomplete(){
+  const input = document.getElementById('placeQuery');
+  if(!input || input.dataset.bound === '1') return;
+  input.dataset.bound = '1';
+  input.addEventListener('input', () => {
+    clearTimeout(placeTimer);
+    placeTimer = setTimeout(() => searchPlace(input.value), 350);
+  });
+}
+
+function useMyPosition(){
+  geolocate('latInput','lngInput','cityInput','geoStatus');
+}
+
+function geolocate(latId, lngId, cityId, statusId){
+  if(!navigator.geolocation) return;
+  const st = document.getElementById(statusId);
+  if(st) st.textContent = '📍 détection...';
+
+  navigator.geolocation.getCurrentPosition(async pos => {
+    const lat = pos.coords.latitude;
+    const lon = pos.coords.longitude;
+
+    const latEl = document.getElementById(latId);
+    const lonEl = document.getElementById(lngId);
+    if(latEl) latEl.value = lat;
+    if(lonEl) lonEl.value = lon;
+
+    if(st) st.textContent = '✓';
+
+    const data = await safeFetchJson(`/api/geo/reverse?lat=${lat}&lon=${lon}`);
+    const city = (data?.address?.city || data?.address?.town || data?.address?.village) || '';
+    const el = document.getElementById(cityId);
+    if(city && el && !el.value) el.value = city;
+
+  }, () => {
+    if(st) st.textContent = '';
+  }, { enableHighAccuracy: false, timeout: 8000, maximumAge: 600000 });
+}
+
+/* ── SCORE ── */
+function updateScore(input, labelId, valId){
+  const v = parseFloat(input.value).toFixed(1).replace('.0','');
+  const lbl = document.getElementById(labelId);
+  const val = document.getElementById(valId);
+  if(lbl) lbl.textContent = v;
+  if(val) val.textContent = v;
+  input.style.setProperty('--pct', ((input.value-1)/9*100).toFixed(1)+'%');
+}
+
+/* ── ARÔMES ── */
+const selectedQuick  = new Set();
+const selectedNez    = new Set();
+const selectedBouche = new Set();
+
+function toggleAroma(btn, ctx){
+  const id = btn.dataset.id;
+  const set = (ctx==='quick') ? selectedQuick : (ctx==='nez') ? selectedNez : selectedBouche;
+  if(set.has(id)){ set.delete(id); btn.classList.remove('sel'); }
+  else{ set.add(id); btn.classList.add('sel'); }
+  updateSummary();
+}
+
+function prepareAromas(){
+  const form = document.getElementById('quickForm');
+  if(!form) return;
+  form.querySelectorAll('input[name="aroma_ids"]').forEach(i=>i.remove());
+  selectedQuick.forEach(id=>{
+    const input=document.createElement('input');
+    input.type='hidden'; input.name='aroma_ids'; input.value=id;
+    form.appendChild(input);
+  });
+}
+
+function prepareAromasDeep(){
+  const form = document.getElementById('deepForm');
+  if(!form) return;
+  const all = new Set([...selectedNez, ...selectedBouche]);
+  form.querySelectorAll('input[name="aroma_ids"]').forEach(i=>i.remove());
+  all.forEach(id=>{
+    const input=document.createElement('input');
+    input.type='hidden'; input.name='aroma_ids'; input.value=id;
+    form.appendChild(input);
+  });
+}
+
+/* ── TAGS (deep) ── */
+const tagSelections = {};
+function toggleTag(btn, group){
+  if(!tagSelections[group]) tagSelections[group]=new Set();
+  const v = btn.textContent.trim();
+  if(tagSelections[group].has(v)){ tagSelections[group].delete(v); btn.classList.remove('sel'); }
+  else{ tagSelections[group].add(v); btn.classList.add('sel'); }
+  syncTagResult(group);
+  updateSummary();
+}
+function selectOne(btn, group){
+  btn.closest('div').querySelectorAll('.aroma-btn').forEach(b=>b.classList.remove('sel'));
+  btn.classList.add('sel');
+  tagSelections[group] = new Set([btn.textContent.trim()]);
+  syncTagResult(group);
+  updateSummary();
+}
+function syncTagResult(group){
+  const map = { vue:'vueResult', cassant:'cassantResult', texture:'textureResult', longueur:'longueurResult' };
+  const el = document.getElementById(map[group]);
+  if(el && tagSelections[group]) el.value = [...tagSelections[group]].join(', ');
+}
+
+/* ── DEEP STEPS ── */
+const stepTitles=['1 · Vue','2 · Cassant','3 · Nez','4 · Bouche','5 · Finale','6 · Score'];
+let currentStep=1;
+
+function initDeep(){
+  currentStep=1;
+  geolocate('latInputDeep','lngInputDeep','cityInputDeep','geoStatusDeep');
+  renderStep();
+  const r = document.getElementById('deepScore');
+  if(r) updateScore(r,'deepScoreLabel','deepScoreVal');
+  updateSummary();
+}
+
+function renderStep(){
+  for(let i=1;i<=6;i++){
+    const el=document.getElementById('step'+i);
+    if(el) el.style.display=(i===currentStep)?'':'none';
+  }
+  const t = document.getElementById('deepStepTitle');
+  const c = document.getElementById('deepStepCount');
+  const p = document.getElementById('deepProgress');
+  if(t) t.textContent = stepTitles[currentStep-1];
+  if(c) c.textContent = currentStep+' / 6';
+  if(p) p.style.width = (currentStep/6*100)+'%';
+
+  const prev = document.getElementById('btnPrev');
+  const next = document.getElementById('btnNext');
+  const submit = document.getElementById('btnSubmit');
+  if(prev) prev.style.display = currentStep>1 ? '' : 'none';
+  if(next) next.style.display = currentStep<6 ? '' : 'none';
+  if(submit) submit.style.display = currentStep===6 ? '' : 'none';
+
+  if(currentStep===6) updateSummary();
+}
+function nextStep(){ if(currentStep<6){ currentStep++; renderStep(); } }
+function prevStep(){ if(currentStep>1){ currentStep--; renderStep(); } }
+
+function updateSummary(){
+  const cassant  = tagSelections['cassant']  ? [...tagSelections['cassant']].join(', ')  : '—';
+  const longueur = tagSelections['longueur'] ? [...tagSelections['longueur']][0]          : '—';
+  const aroNez    = [...document.querySelectorAll('#aromaPickerNez .aroma-btn.sel')].map(b=>b.textContent.trim()).join(', ') || '—';
+  const aroBouche = [...document.querySelectorAll('#aromaPickerBouche .aroma-btn.sel')].map(b=>b.textContent.trim()).join(', ') || '—';
+  const sum = document.getElementById('deepSummary');
+  if(sum){
+    sum.innerHTML = `Cassant : ${escapeHtml(cassant)}<br>Nez : ${escapeHtml(aroNez)}<br>Bouche : ${escapeHtml(aroBouche)}<br>Finale : ${escapeHtml(longueur)}`;
+  }
+}
+
+/* ── FILTRES ── */
+let activeScore=0, activeMode='', activeAroma='', currentView='grid';
+
+function setFilter(type, val, btn){
+  const group = btn?.closest('.chips');
+  if(group) group.querySelectorAll('.chip').forEach(c=>c.classList.remove('active'));
+  if(btn) btn.classList.add('active');
+
+  document.querySelectorAll(`.chip[data-filter="${type}"]`).forEach(c=>{
+    c.classList.toggle('active', c.dataset.value === String(val));
+  });
+
+  if(type==='score') activeScore=parseFloat(val);
+  if(type==='mode')  activeMode=val;
+  filterCards();
+}
+
+/* Filtre arôme — toggle */
+function setAromaFilter(name, btn){
+  const needle = String(name || '').trim().toLowerCase();
+
+  if(activeAroma && activeAroma.trim().toLowerCase() === needle){
+    activeAroma = '';
+    document.querySelectorAll('#aromaFilterDesk .chip, #aromaFilterMob .chip')
+      .forEach(c => c.classList.remove('aroma-active'));
+  } else {
+    activeAroma = name;
+
+    document.querySelectorAll('#aromaFilterDesk .chip, #aromaFilterMob .chip')
+      .forEach(c => {
+        const t = (c.textContent || '').trim().toLowerCase();
+        c.classList.toggle('aroma-active', t === needle);
+      });
+  }
+  filterCards();
+}
+
+function filterCards(){
+  const desktop = document.getElementById('searchInput');
+  const mobile  = document.getElementById('searchInputMobile');
+  const q = (desktop?.value || '').toLowerCase().trim();
+
+  const activeEl = document.activeElement;
+  if(mobile && activeEl !== mobile && mobile.value !== (desktop?.value || '')) mobile.value = (desktop?.value || '');
+
+  let visible = 0;
+  const cards = document.querySelectorAll('#cardsGrid .card');
+
+  const aNeedle = (activeAroma || '').toLowerCase();
+
+  cards.forEach(card => {
+    let day = '';
+    try{
+      const node = card.querySelector('.card-data');
+      const dd = JSON.parse(node?.textContent || '{}');
+      day = (dd.day || '');
+    }catch(_){}
+
+    const matchDay = !activeDay || day === activeDay;
+
+    const name   = (card.dataset.name   || '').toLowerCase();
+    const maker  = (card.dataset.maker  || '').toLowerCase();
+    const city   = (card.dataset.city   || '').toLowerCase();
+    const aromas = (card.dataset.aromas || '').toLowerCase();
+    const score  = parseFloat(card.dataset.score || 0);
+    const mode   = card.dataset.mode || '';
+
+    const matchSearch = !q || name.includes(q) || maker.includes(q) || city.includes(q) || aromas.includes(q);
+    const matchScore  = score >= activeScore;
+    const matchMode   = !activeMode  || mode === activeMode;
+    const matchAroma  = !aNeedle || aromas.includes(aNeedle);
+
+    const show = matchSearch && matchScore && matchMode && matchAroma && matchDay;
+    card.style.display = show ? '' : 'none';
+    if(show) visible++;
+  });
+
+  const label = document.getElementById('countLabel');
+  if(label) label.textContent = '/ ' + visible + ' entrées';
+  const statD = document.getElementById('statCount');
+  if(statD) statD.textContent = visible;
+  const statM = document.getElementById('statCountMobile');
+  if(statM) statM.textContent = visible;
+
+  const emptyMsg = document.getElementById('emptyMsg');
+  if(emptyMsg) emptyMsg.style.display = (visible === 0 && cards.length > 0) ? '' : 'none';
+
+  if(currentView === 'timeline') buildTimeline();
+}
+
+/* ── VUE GRILLE / CHRONOLOGIE ── */
+function setView(view, btn){
+  currentView = view;
+
+  document.querySelectorAll('.chip[data-filter="view"]').forEach(b=>{
+    b.classList.toggle('active', b.dataset.value === view);
+  });
+
+  const grid     = document.getElementById('cardsGrid');
+  const timeline = document.getElementById('timelineView');
+  if(!grid || !timeline) return;
+
+  if(view === 'grid'){
+    grid.style.display = '';
+    timeline.style.display = 'none';
+  } else {
+    grid.style.display = 'none';
+    timeline.style.display = '';
+    buildTimeline();
+  }
+}
+
+function buildTimeline(){
+  const timeline = document.getElementById('timelineView');
+  if(!timeline) return;
+  timeline.innerHTML = '';
+
+  const cards = [...document.querySelectorAll('#cardsGrid .card')]
+    .filter(c => c.style.display !== 'none');
+
+  if(!cards.length){
+    timeline.innerHTML = '<div class="empty"><div class="empty-icon">🔍</div><p>Aucune dégustation ne correspond aux filtres</p></div>';
+    return;
+  }
+
+  const groups = {};
+  const monthOrder = [];
+  cards.forEach(card => {
+    const d = card.dataset.date || '';
+    if(!groups[d]){ groups[d] = []; monthOrder.push(d); }
+    groups[d].push(card);
+  });
+
+  const months = ['Janvier','Février','Mars','Avril','Mai','Juin',
+                  'Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
+
+  const tl = document.createElement('div');
+  tl.className = 'timeline';
+
+  monthOrder.forEach(key => {
+    const [year, monthIdx] = key.split('-');
+    const label = monthIdx
+      ? `${months[parseInt(monthIdx,10)-1]} ${year}`
+      : key;
+
+    const section = document.createElement('div');
+    section.className = 'timeline-month';
+
+    const lbl = document.createElement('div');
+    lbl.className = 'timeline-month-label';
+    lbl.textContent = label;
+    section.appendChild(lbl);
+
+    const cardWrap = document.createElement('div');
+    cardWrap.className = 'timeline-cards';
+
+    groups[key].forEach(card => {
+      const node = card.querySelector('.card-data');
+      let d;
+      try{ d = JSON.parse(node?.textContent || '{}'); }catch(e){ return; }
+
+      const tc = document.createElement('div');
+      tc.className = 'timeline-card';
+      tc.setAttribute('role','button');
+      tc.setAttribute('tabindex','0');
+      tc.onclick = () => openDetail(card);
+      tc.onkeydown = (ev)=>{ if(ev.key==='Enter'||ev.key===' '){ ev.preventDefault(); openDetail(card); } };
+
+      const thumb = document.createElement('div');
+      thumb.className = 'timeline-card-thumb';
+      if(d.photo_url){
+        const img = document.createElement('img');
+        img.src = d.photo_url;
+        img.alt = '';
+        thumb.appendChild(img);
+      } else {
+        thumb.textContent = '🍫';
+      }
+      tc.appendChild(thumb);
+
+      const body = document.createElement('div');
+      body.className = 'timeline-card-body';
+
+      const nm = document.createElement('div');
+      nm.className = 'timeline-card-name';
+      nm.textContent = d.name || '';
+      body.appendChild(nm);
+
+      const meta = document.createElement('div');
+      meta.className = 'timeline-card-meta';
+
+      if(d.score && parseFloat(d.score) > 0){
+        const sc = document.createElement('span');
+        sc.className = 'timeline-card-score';
+        sc.textContent = d.score + '/10';
+        meta.appendChild(sc);
+      }
+      if(d.maker){
+        const mk = document.createElement('span');
+        mk.className = 'timeline-card-city';
+        mk.textContent = d.maker;
+        meta.appendChild(mk);
+      }
+      if(d.city){
+        const ct = document.createElement('span');
+        ct.className = 'timeline-card-city';
+        ct.textContent = '📍 ' + d.city;
+        meta.appendChild(ct);
+      }
+      body.appendChild(meta);
+
+      if(d.aromas && d.aromas.length){
+        const ar = document.createElement('div');
+        ar.className = 'timeline-card-aromas';
+        d.aromas.forEach(a => {
+          const tag = document.createElement('span');
+          tag.className = 'aroma-tag';
+          tag.textContent = a;
+          ar.appendChild(tag);
+        });
+        body.appendChild(ar);
+      }
+
+      tc.appendChild(body);
+      cardWrap.appendChild(tc);
+    });
+
+    section.appendChild(cardWrap);
+    tl.appendChild(section);
+  });
+
+  timeline.appendChild(tl);
+}
+
+/* ─────────────────────────────────────────────
+   Collections (détail)
+───────────────────────────────────────────── */
+async function loadTastingCollections(tastingID){
+  const list = document.getElementById('detCollList');
+  const empty = document.getElementById('detCollListEmpty');
+  if(!list || !empty) return;
+
+  list.innerHTML = '';
+  empty.style.display = 'none';
+
+  const data = await safeFetchJson('/collections/for?tasting_id=' + encodeURIComponent(tastingID));
+  if(!data || !data.ok){
+    empty.textContent = 'Impossible de charger les collections';
+    empty.style.display = '';
+    return;
+  }
+
+  const cols = data.collections || [];
+  if(!cols.length){
+    empty.textContent = 'Aucune collection';
+    empty.style.display = '';
+    return;
+  }
+
+  cols.forEach(c => {
+    const pill = document.createElement('a');
+    pill.className = 'pill';
+    pill.href = '/collections/view?id=' + encodeURIComponent(c.id);
+    pill.style.textDecoration = 'none';
+    pill.style.cursor = 'pointer';
+    pill.innerHTML = `${escapeHtml(c.emoji || '📁')} ${escapeHtml(c.name)}`;
+    list.appendChild(pill);
+  });
+}
+
+/* ── DETAIL SHEET ── */
+function openDetail(card){
+  const node = card.querySelector('.card-data');
+  if(!node) return;
+  let d;
+  try{ d = JSON.parse(node.textContent); }catch(e){ return; }
+  lastDetail = d;
+
+  document.getElementById('detName').textContent = d.name || '—';
+  document.getElementById('detSub').textContent  = [d.maker, d.city].filter(Boolean).join(' · ') || '—';
+
+  const scoreVal = d.score && parseFloat(d.score) > 0;
+  document.getElementById('detScore').textContent = scoreVal ? d.score : '—';
+  const scorePill = document.getElementById('detScore').closest('.pill');
+  if(scorePill) scorePill.style.display = scoreVal ? '' : 'none';
+
+  document.getElementById('detCity').textContent = d.city || '—';
+  document.getElementById('detDate').textContent = d.date || '—';
+  document.getElementById('detMode').textContent = d.mode === 'deep' ? '🔬 Approfondie' : '⚡ Rapide';
+
+  const aWrap = document.getElementById('detAromas');
+  const aEmpty = document.getElementById('detAromasEmpty');
+  aWrap.innerHTML = '';
+
+  if(d.aromas && d.aromas.length){
+    aEmpty.style.display = 'none';
+
+    d.aromas.forEach(a=>{
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'chip';
+      b.textContent = a;
+      b.style.height = '30px';
+      b.style.padding = '0 10px';
+
+      b.onclick = () => {
+        closeDetailDirect();
+        activeDay = '';
+        setAromaFilter(a, null);
+      };
+
+      aWrap.appendChild(b);
+    });
+
+  } else {
+    aEmpty.style.display = '';
+  }
+
+  const notes = (d.notes || '').trim();
+  document.getElementById('detNotes').innerHTML = notes ? escapeHtml(notes).replace(/\n/g,'<br>') : '<em>—</em>';
+
+  const img   = document.getElementById('detPhoto');
+  const emoji = document.getElementById('detEmoji');
+  if(d.photo_url){
+    img.src = d.photo_url;
+    img.style.display = '';
+    emoji.style.display = 'none';
+  } else {
+    img.style.display = 'none';
+    emoji.style.display = '';
+  }
+
+  document.getElementById('detEditLink').href   = '/edit?id=' + encodeURIComponent(d.id);
+  document.getElementById('detDeleteId').value  = d.id;
+  document.getElementById('detTastingId').value = d.id;
+
+  const fb = document.getElementById('detCollFeedback');
+  if(fb) fb.textContent = '';
+  const sel = document.getElementById('detCollSelect');
+  if(sel) sel.value = '';
+  loadTastingCollections(d.id);
+
+  openOverlay('detOverlay');
+}
+function closeDetail(e){
+  if(e.target === document.getElementById('detOverlay')) closeDetailDirect();
+}
+function closeDetailDirect(){ closeOverlay('detOverlay'); }
+
+/* ── AJOUT À UNE COLLECTION (AJAX JSON) ── */
+async function addToCollection(){
+  const sel      = document.getElementById('detCollSelect');
+  const tidEl    = document.getElementById('detTastingId');
+  const feedback = document.getElementById('detCollFeedback');
+  const btn      = document.getElementById('detCollBtn');
+  if(!sel || !tidEl) return;
+
+  const collID    = sel.value;
+  const tastingID = tidEl.value;
+
+  if(!collID){
+    if(feedback){
+      feedback.innerHTML = '⚠️ Choisis une collection d\'abord.';
+      feedback.style.color = 'var(--muted)';
+    }
+    return;
+  }
+
+  if(btn){ btn.disabled=true; btn.textContent='…'; }
+  if(feedback){ feedback.textContent=''; }
+
+  try{
+    const body = new URLSearchParams({ collection_id: collID, tasting_id: tastingID });
+    const resp = await fetch('/collections/addtasting', {
+      method: 'POST',
+      headers: { 'Accept': 'application/json' },
+      body
+    });
+
+    const data = await resp.json();
+
+    if(!resp.ok || !data.ok){
+      const msg = data.error || 'Erreur serveur';
+      if(feedback){
+        feedback.textContent = '✕ ' + msg;
+        feedback.style.color = '#8b1a1a';
+      }
+      return;
+    }
+
+    if(feedback){
+      const collName  = data.collection_name  || sel.options[sel.selectedIndex]?.text || 'la collection';
+      const collEmoji = data.collection_emoji || '';
+      const collId    = data.collection_id || collID;
+      feedback.innerHTML = `✓ Ajouté à <a href="/collections/view?id=${encodeURIComponent(collId)}"
+        style="color:var(--caramel);font-weight:600;text-decoration:underline;"
+        onclick="closeDetailDirect()">${collEmoji} ${escapeHtml(collName)}</a> ↗`;
+      feedback.style.color = 'var(--caramel)';
+    }
+    sel.value = '';
+    await loadTastingCollections(tastingID);
+
+  }catch(err){
+    console.error('addToCollection error:', err);
+    if(feedback){
+      feedback.textContent = '✕ Erreur réseau, réessaie.';
+      feedback.style.color = '#8b1a1a';
+    }
+  }finally{
+    if(btn){ btn.disabled=false; btn.textContent='Ajouter'; }
+  }
+}
+
+function escapeHtml(s){
+  return String(s).replace(/[&<>"']/g, (c)=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+/* Enregistrement du Service Worker (PWA) */
+if('serviceWorker' in navigator){
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch(() => {});
+  });
+}
+
+/* ── Filtres depuis la fiche détail ── */
+function filterFromDetail(kind){
+  if(!lastDetail) return;
+
+  closeDetailDirect();
+
+  if(kind === 'city'){
+    const city = (lastDetail.city || '').trim();
+    if(!city) return;
+
+    const s = document.getElementById('searchInput');
+    const sm = document.getElementById('searchInputMobile');
+    if(s) s.value = city;
+    if(sm) sm.value = city;
+
+    activeDay = '';
+    filterCards();
+    return;
+  }
+
+  if(kind === 'day'){
+    const day = (lastDetail.day || '').trim();
+    if(!day) return;
+
+    activeDay = day;
+
+    const s = document.getElementById('searchInput');
+    const sm = document.getElementById('searchInputMobile');
+    if(s) s.value = '';
+    if(sm) sm.value = '';
+
+    filterCards();
+    return;
+  }
+}
+/* ─────────────────────────────
+   Activation automatique onglet actif
+───────────────────────────── */
+document.addEventListener("DOMContentLoaded", function(){
+
+  const path = window.location.pathname;
+  const items = document.querySelectorAll(".bottom-nav-item");
+
+  items.forEach(item => item.classList.remove("active"));
+
+  if(path === "/" || path === "/index"){
+    document.querySelector('.bottom-nav-item[href="/"]')?.classList.add("active");
+  }
+  else if(path.startsWith("/map")){
+    document.querySelector('.bottom-nav-item[href="/map"]')?.classList.add("active");
+  }
+  else if(path.startsWith("/collections")){
+    document.querySelector('.bottom-nav-item[href="/collections"]')?.classList.add("active");
+  }
+
+});
+
+</script>
+<!-- BOTTOM NAV MOBILE -->
+<nav class="bottom-nav">
+
+  <a class="bottom-nav-item" href="/">
+    <span class="nav-icon">📓</span>
+    <span>Journal</span>
+  </a>
+
+  <a class="bottom-nav-item" href="/map">
+    <span class="nav-icon">🗺️</span>
+    <span>Carte</span>
+  </a>
+
+  <a class="bottom-nav-item" href="/collections">
+    <span class="nav-icon">📁</span>
+    <span>Collections</span>
+  </a>
+
+  <button class="bottom-nav-item bottom-nav-add" onclick="openModal()">
+    <span class="nav-icon">＋</span>
+    <span>Ajouter</span>
+  </button>
+
+</nav>
+
+</body>
+</html>

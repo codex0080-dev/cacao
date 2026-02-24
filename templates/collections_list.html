@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Collections — Cacao</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,400&family=Instrument+Sans:wght@400;500;600&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --cacao:#2C1810;--cacao-md:#4A2C1A;--cacao-lt:#7A4528;
+  --caramel:#C4843A;
+  --cream:#FBF6EF;--cream-dk:#EDE4D7;--cream-md:#E2D5C3;
+  --muted:#7A6248;--white:#FFFFFF;--text:#1C0F08;
+  --shadow:0 8px 32px rgba(44,24,16,.10);
+  --shadow-lg:0 16px 48px rgba(44,24,16,.16);
+  --radius:14px;--tap:44px;
+}
+body{background:var(--cream);color:var(--text);font-family:'Instrument Sans',sans-serif;min-height:100vh;-webkit-font-smoothing:antialiased;}
+body.modal-open{overflow:hidden;}
+a{color:inherit;text-decoration:none;}
+button{font:inherit;}
+
+nav.top-nav{
+  position:fixed;top:0;left:0;right:0;z-index:100;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 20px;height:60px;padding-top:env(safe-area-inset-top);
+  background:rgba(251,246,239,.96);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+  border-bottom:1px solid var(--cream-dk);
+}
+.logo{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:600;color:var(--cacao);display:flex;align-items:center;gap:10px;}
+.logo-dot{width:8px;height:8px;border-radius:50%;background:var(--caramel);animation:pulse 2.4s ease-in-out infinite;}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.4);opacity:.7}}
+.btn-ghost{display:flex;align-items:center;gap:6px;padding:0 14px;height:var(--tap);background:transparent;border:1.5px solid var(--cream-dk);border-radius:10px;font-size:13px;color:var(--muted);cursor:pointer;transition:all .2s;text-decoration:none;white-space:nowrap;}
+.btn-ghost:hover{border-color:var(--caramel);color:var(--caramel);}
+.btn-primary{display:flex;align-items:center;gap:6px;padding:0 18px;height:var(--tap);background:var(--cacao);color:var(--cream);border:none;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;transition:all .2s;white-space:nowrap;}
+.btn-primary:hover{background:var(--cacao-md);}
+
+.page{padding:80px 20px 110px;max-width:800px;margin:0 auto;}
+.page-title{font-family:'Cormorant Garamond',serif;font-size:32px;font-weight:300;color:var(--cacao);margin-bottom:6px;}
+.page-title em{font-style:italic;color:var(--caramel);}
+.page-sub{font-size:13px;color:var(--muted);margin-bottom:28px;}
+
+.coll-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:14px;}
+
+.coll-card{
+  display:flex;flex-direction:column;background:var(--white);
+  border-radius:16px;border:1px solid rgba(44,24,16,.07);
+  overflow:hidden;cursor:pointer;transition:all .22s;
+  text-decoration:none;color:inherit;
+}
+.coll-card:hover{transform:translateY(-3px);box-shadow:var(--shadow-lg);}
+.coll-card:active{transform:scale(.99);}
+.coll-card-header{
+  height:80px;background:linear-gradient(135deg,#2a1209,#6b3020);
+  display:flex;align-items:center;justify-content:center;font-size:40px;
+}
+.coll-card-body{padding:14px 16px 16px;}
+.coll-card-name{font-family:'Cormorant Garamond',serif;font-size:20px;color:var(--cacao);margin-bottom:5px;line-height:1.2;}
+.coll-card-count{font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);}
+.coll-card-count strong{color:var(--caramel);}
+
+.coll-card-new{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:10px;min-height:160px;padding:20px;
+  background:transparent;border:2px dashed var(--cream-dk);border-radius:16px;
+  cursor:pointer;transition:all .2s;font-size:13px;color:var(--muted);
+}
+.coll-card-new:hover{border-color:var(--caramel);color:var(--caramel);}
+.coll-card-new-icon{font-size:28px;opacity:.5;}
+
+.empty{text-align:center;padding:60px 20px;color:var(--muted);}
+.empty-icon{font-size:48px;margin-bottom:16px;opacity:.4;}
+.empty p{font-family:'Cormorant Garamond',serif;font-size:20px;font-style:italic;margin-bottom:20px;}
+
+/* Modal */
+.overlay{position:fixed;inset:0;z-index:300;background:rgba(28,15,8,.55);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);display:flex;align-items:flex-end;justify-content:center;opacity:0;pointer-events:none;transition:opacity .25s;}
+.overlay.open{opacity:1;pointer-events:all;}
+.modal{width:100%;max-width:480px;background:var(--white);border-radius:20px 20px 0 0;padding:20px 20px calc(20px + env(safe-area-inset-bottom));transform:translateY(100%);transition:transform .35s cubic-bezier(.4,0,.2,1);max-height:80vh;overflow-y:auto;box-shadow:0 -8px 40px rgba(44,24,16,.18);}
+.overlay.open .modal{transform:translateY(0);}
+.modal-handle{width:40px;height:4px;background:var(--cream-md);border-radius:2px;margin:0 auto 18px;}
+.modal-title{font-family:'Cormorant Garamond',serif;font-size:23px;color:var(--cacao);margin-bottom:18px;}
+.field{margin-bottom:14px;}
+.field label{display:block;font-family:'DM Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:6px;}
+.field input{width:100%;height:var(--tap);padding:0 14px;border:1.5px solid var(--cream-dk);border-radius:10px;background:var(--cream);font-size:15px;color:var(--text);outline:none;transition:border-color .2s;font-family:inherit;}
+.field input:focus{border-color:var(--caramel);background:var(--white);}
+.btn-save{width:100%;height:52px;background:var(--cacao);color:var(--cream);border:none;border-radius:12px;font-size:16px;font-weight:600;cursor:pointer;margin-top:14px;transition:all .2s;}
+.btn-save:hover{background:var(--cacao-md);}
+.btn-cancel{background:none;border:none;color:var(--muted);font-size:14px;cursor:pointer;display:block;margin:14px auto 0;padding:8px 20px;min-height:40px;}
+
+/* ── BARRE NAV MOBILE ── */
+.bottom-nav{
+  display:none;position:fixed;bottom:0;left:0;right:0;z-index:200;
+  background:rgba(251,246,239,.97);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+  border-top:1px solid var(--cream-dk);padding-bottom:env(safe-area-inset-bottom);
+  grid-template-columns:repeat(4,1fr);
+}
+.bottom-nav-item{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:3px;padding:10px 4px 8px;font-size:10px;font-weight:500;color:var(--muted);
+  text-decoration:none;background:none;border:none;cursor:pointer;
+  font-family:'Instrument Sans',sans-serif;transition:color .15s;
+  -webkit-tap-highlight-color:transparent;
+}
+.bottom-nav-item .nav-icon{font-size:20px;line-height:1;}
+.bottom-nav-item.active{color:var(--cacao);}
+.bottom-nav-item:active{transform:scale(.92);}
+.bottom-nav-add{color:var(--caramel);font-weight:600;}
+.bottom-nav-add .nav-icon{
+  background:var(--cacao);color:var(--cream);
+  width:36px;height:36px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:22px;box-shadow:0 3px 12px rgba(44,24,16,.25);margin-bottom:1px;
+}
+
+@media(max-width:900px){
+  .bottom-nav{display:grid;}
+  .page{padding-bottom:calc(84px + env(safe-area-inset-bottom));}
+  #navBtnNew{display:none;}
+  .coll-grid{grid-template-columns:1fr;}
+}
+</style>
+</head>
+<body>
+
+<nav class="top-nav">
+  <div class="logo"><div class="logo-dot"></div>Cacao</div>
+  <div style="display:flex;gap:8px;align-items:center;">
+    <a class="btn-ghost" href="/">← Journal</a>
+    <button id="navBtnNew" class="btn-primary" type="button" onclick="openNewColl()">+ Collection</button>
+  </div>
+</nav>
+
+<div class="page">
+  <div class="page-title">Mes <em>collections</em></div>
+  <div class="page-sub">{{len .Collections}} collection{{if gt (len .Collections) 1}}s{{end}}</div>
+
+  {{if .Collections}}
+  <div class="coll-grid">
+    {{range .Collections}}
+    <a class="coll-card" href="/collections/view?id={{.ID}}">
+      <div class="coll-card-header">{{.Emoji}}</div>
+      <div class="coll-card-body">
+        <div class="coll-card-name">{{.Name}}</div>
+        <div class="coll-card-count"><strong>{{.Count}}</strong> dégustation{{if gt .Count 1}}s{{end}}</div>
+      </div>
+    </a>
+    {{end}}
+    <button class="coll-card-new" type="button" onclick="openNewColl()">
+      <span class="coll-card-new-icon">📁</span>
+      <span>Nouvelle collection</span>
+    </button>
+  </div>
+
+  {{else}}
+  <div class="empty">
+    <div class="empty-icon">📁</div>
+    <p>Tu n'as pas encore de collection</p>
+    <button class="btn-primary" type="button" onclick="openNewColl()" style="margin:0 auto;">
+      + Créer ma première collection
+    </button>
+  </div>
+  {{end}}
+</div>
+
+<!-- Modal nouvelle collection -->
+<div class="overlay" id="newCollOverlay" onclick="if(event.target===this) closeNewColl()">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Nouvelle collection</div>
+    <form method="POST" action="/collections/add">
+      <div class="field">
+        <label>Emoji</label>
+        <input type="text" name="emoji" value="📁" style="width:100px;">
+      </div>
+      <div class="field">
+        <label>Nom *</label>
+        <input type="text" name="name" placeholder="Ex : Coups de cœur, Barcelone…" required>
+      </div>
+      <button type="submit" class="btn-save">Créer la collection</button>
+      <button type="button" class="btn-cancel" onclick="closeNewColl()">Annuler</button>
+    </form>
+  </div>
+</div>
+
+<!-- Barre navigation mobile — onglet Collections actif -->
+<nav class="bottom-nav">
+  <a class="bottom-nav-item" href="/">
+    <span class="nav-icon">📓</span>
+    <span>Journal</span>
+  </a>
+  <a class="bottom-nav-item" href="/map">
+    <span class="nav-icon">🗺️</span>
+    <span>Carte</span>
+  </a>
+  <a class="bottom-nav-item active" href="/collections">
+    <span class="nav-icon">📁</span>
+    <span>Collections</span>
+  </a>
+  <button class="bottom-nav-item bottom-nav-add" type="button" onclick="openNewColl()">
+    <span class="nav-icon">＋</span>
+    <span>Créer</span>
+  </button>
+</nav>
+
+<script>
+function openNewColl(){
+  document.getElementById('newCollOverlay').classList.add('open');
+  document.body.classList.add('modal-open');
+}
+function closeNewColl(){
+  document.getElementById('newCollOverlay').classList.remove('open');
+  document.body.classList.remove('modal-open');
+}
+document.addEventListener('keydown', e => { if(e.key==='Escape') closeNewColl(); });
+if('serviceWorker' in navigator){
+  window.addEventListener('load', () => navigator.serviceWorker.register('/sw.js').catch(()=>{}));
+}
+</script>
+</body>
+</html>

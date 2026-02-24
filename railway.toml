@@ -1,0 +1,6 @@
+[build]
+builder = "nixpacks"
+
+[deploy]
+startCommand = "./cacao"
+restartPolicyType = "on_failure"

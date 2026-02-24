@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Carte — Cacao</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,400&family=Instrument+Sans:wght@400;500;600&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --cacao:#2C1810;--cacao-md:#4A2C1A;--cacao-lt:#7A4528;
+  --caramel:#C4843A;
+  --cream:#FBF6EF;--cream-dk:#EDE4D7;--cream-md:#E2D5C3;
+  --muted:#7A6248;--white:#FFFFFF;--text:#1C0F08;
+  --shadow:0 8px 32px rgba(44,24,16,.10);
+  --shadow-lg:0 16px 48px rgba(44,24,16,.16);
+  --radius:14px;--tap:44px;
+}
+html,body{height:100%;background:var(--cream);color:var(--text);font-family:'Instrument Sans',sans-serif;-webkit-font-smoothing:antialiased;}
+
+/* ── NAV ── */
+nav{
+  position:fixed;top:0;left:0;right:0;z-index:1000;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 20px;height:60px;padding-top:env(safe-area-inset-top);
+  background:rgba(251,246,239,.96);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+  border-bottom:1px solid var(--cream-dk);
+}
+.logo{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:600;color:var(--cacao);display:flex;align-items:center;gap:10px;}
+.logo-dot{width:8px;height:8px;border-radius:50%;background:var(--caramel);animation:pulse 2.4s ease-in-out infinite;}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.4);opacity:.7}}
+
+.nav-right{display:flex;align-items:center;gap:8px;}
+.btn-ghost{
+  display:flex;align-items:center;gap:6px;
+  padding:0 14px;height:var(--tap);
+  background:transparent;border:1.5px solid var(--cream-dk);border-radius:10px;
+  font-size:13px;color:var(--muted);cursor:pointer;transition:all .2s;text-decoration:none;white-space:nowrap;
+}
+.btn-ghost:hover{border-color:var(--caramel);color:var(--caramel);}
+
+/* ── LAYOUT : sidebar + map ── */
+.layout{
+  display:grid;
+  grid-template-columns:300px 1fr;
+  height:100vh;
+  padding-top:60px;
+}
+
+/* ── SIDEBAR ── */
+aside{
+  background:var(--white);border-right:1px solid var(--cream-dk);
+  overflow-y:auto;display:flex;flex-direction:column;
+}
+.sidebar-header{
+  padding:18px 16px 14px;border-bottom:1px solid var(--cream-dk);
+  flex-shrink:0;
+}
+.sidebar-title{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:300;color:var(--cacao);}
+.sidebar-title em{font-style:italic;color:var(--caramel);}
+.stat-row{display:flex;gap:20px;margin-top:10px;}
+.stat-block{display:flex;flex-direction:column;}
+.stat-num{font-family:'Cormorant Garamond',serif;font-size:30px;font-weight:300;color:var(--cacao);line-height:1;}
+.stat-lbl{font-size:11px;color:var(--muted);margin-top:2px;}
+
+.sidebar-lbl{
+  font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--muted);margin-bottom:8px;
+}
+
+/* Recherche */
+.search-wrap{padding:14px 16px;border-bottom:1px solid var(--cream-dk);flex-shrink:0;}
+.search-inner{position:relative;}
+.search-inner input{
+  width:100%;height:var(--tap);padding:0 12px 0 34px;
+  border:1.5px solid var(--cream-dk);border-radius:10px;
+  background:var(--cream);font-size:14px;color:var(--text);outline:none;transition:border-color .2s;font-family:inherit;
+}
+.search-inner input::placeholder{color:var(--muted);}
+.search-inner input:focus{border-color:var(--caramel);}
+.search-icon{position:absolute;left:10px;top:50%;transform:translateY(-50%);font-size:15px;color:var(--muted);pointer-events:none;}
+
+/* Liste des dégustations */
+.tasting-list{flex:1;overflow-y:auto;}
+.tasting-item{
+  display:flex;gap:12px;align-items:flex-start;
+  padding:12px 16px;border-bottom:1px solid var(--cream-dk);
+  cursor:pointer;transition:background .15s;
+}
+.tasting-item:hover{background:var(--cream);}
+.tasting-item.no-coords{opacity:.45;}
+.tasting-item.highlighted{background:rgba(196,132,58,.07);}
+
+.ti-thumb{
+  width:44px;height:44px;flex-shrink:0;border-radius:8px;
+  background:linear-gradient(135deg,#2a1209,#6b3020);
+  display:flex;align-items:center;justify-content:center;
+  font-size:18px;overflow:hidden;position:relative;
+}
+.ti-thumb img{width:100%;height:100%;object-fit:cover;position:absolute;inset:0;}
+.ti-body{flex:1;min-width:0;}
+.ti-name{font-family:'Cormorant Garamond',serif;font-size:15px;color:var(--cacao);line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.ti-meta{display:flex;gap:8px;align-items:center;margin-top:3px;flex-wrap:wrap;}
+.ti-score{font-family:'DM Mono',monospace;font-size:10px;color:var(--caramel);background:rgba(196,132,58,.1);padding:1px 6px;border-radius:5px;}
+.ti-city{font-size:11px;color:var(--muted);}
+.ti-no-geo{font-size:10px;color:var(--muted);font-style:italic;}
+
+/* ── CARTE ── */
+#map{width:100%;height:100%;}
+
+/* Popup Leaflet personnalisé */
+.leaflet-popup-content-wrapper{
+  border-radius:12px;border:1px solid rgba(44,24,16,.08);
+  box-shadow:0 8px 32px rgba(44,24,16,.18);padding:0;overflow:hidden;
+}
+.leaflet-popup-content{margin:0;width:220px!important;}
+.popup-photo{
+  width:100%;height:100px;object-fit:cover;display:block;
+  background:linear-gradient(135deg,#2a1209,#6b3020);
+  font-size:32px;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.7);
+}
+.popup-body{padding:10px 12px 12px;}
+.popup-name{font-family:'Cormorant Garamond',serif;font-size:16px;color:var(--cacao);line-height:1.2;margin-bottom:3px;}
+.popup-maker{font-size:11px;color:var(--muted);margin-bottom:6px;}
+.popup-row{display:flex;gap:6px;align-items:center;flex-wrap:wrap;}
+.popup-score{font-family:'DM Mono',monospace;font-size:11px;color:var(--caramel);background:rgba(196,132,58,.1);padding:2px 7px;border-radius:6px;}
+.popup-city{font-size:11px;color:var(--muted);}
+.popup-aromas{display:flex;flex-wrap:wrap;gap:3px;margin-top:6px;}
+.popup-aroma{padding:2px 7px;background:var(--cream);border-radius:5px;font-size:10px;color:var(--cacao-lt);font-family:'DM Mono',monospace;}
+.popup-link{
+  display:block;margin-top:10px;
+  text-align:center;padding:7px;background:var(--cacao);color:var(--cream);
+  border-radius:8px;font-size:12px;font-weight:600;text-decoration:none;
+  transition:background .15s;
+}
+.popup-link:hover{background:var(--cacao-md);}
+.leaflet-popup-tip-container{display:none;}
+
+/* Marqueur custom */
+.map-marker{
+  width:32px;height:32px;border-radius:50%;
+  background:var(--caramel);border:3px solid var(--white);
+  box-shadow:0 3px 12px rgba(44,24,16,.3);
+  display:flex;align-items:center;justify-content:center;
+  font-size:14px;cursor:pointer;
+  transition:transform .15s;
+}
+.map-marker:hover,.map-marker.active{transform:scale(1.2);}
+
+/* Vide */
+.no-geo-notice{
+  padding:12px 16px;background:rgba(196,132,58,.06);
+  border-top:1px solid var(--cream-dk);font-size:12px;color:var(--muted);
+  flex-shrink:0;text-align:center;
+}
+
+/* Mobile */
+@media(max-width:800px){
+  .layout{grid-template-columns:1fr;grid-template-rows:60px 1fr;height:auto;}
+  aside{display:none;}
+  #map{height:calc(100vh - 60px - 64px - env(safe-area-inset-bottom));}
+}
+
+/* ── BARRE NAV MOBILE ── */
+.bottom-nav{
+  display:none;position:fixed;bottom:0;left:0;right:0;z-index:1001;
+  background:rgba(251,246,239,.97);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+  border-top:1px solid var(--cream-dk);padding-bottom:env(safe-area-inset-bottom);
+  grid-template-columns:repeat(4,1fr);
+}
+.bottom-nav-item{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:3px;padding:10px 4px 8px;font-size:10px;font-weight:500;color:var(--muted);
+  text-decoration:none;background:none;border:none;cursor:pointer;
+  font-family:'Instrument Sans',sans-serif;transition:color .15s;
+  -webkit-tap-highlight-color:transparent;
+}
+.bottom-nav-item .nav-icon{font-size:20px;line-height:1;}
+.bottom-nav-item.active{color:var(--cacao);}
+.bottom-nav-item:active{transform:scale(.92);}
+.bottom-nav-add{color:var(--caramel);font-weight:600;}
+.bottom-nav-add .nav-icon{
+  background:var(--cacao);color:var(--cream);
+  width:36px;height:36px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:22px;box-shadow:0 3px 12px rgba(44,24,16,.25);margin-bottom:1px;
+}
+@media(max-width:900px){
+  .bottom-nav{display:grid;}
+  #navBtnBack{display:none;}
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="logo"><div class="logo-dot"></div>Cacao</div>
+  <div class="nav-right">
+    <a id="navBtnBack" class="btn-ghost" href="/">← Bibliothèque</a>
+  </div>
+</nav>
+
+<div class="layout">
+  <!-- Sidebar -->
+  <aside>
+    <div class="sidebar-header">
+      <div class="sidebar-title">Ma carte <em>gustative</em></div>
+      <div class="stat-row">
+        <div class="stat-block">
+          <div class="stat-num" id="statTotal">{{len .Tastings}}</div>
+          <div class="stat-lbl">dégustations</div>
+        </div>
+        <div class="stat-block">
+          <div class="stat-num">{{.CityCount}}</div>
+          <div class="stat-lbl">villes</div>
+        </div>
+        <div class="stat-block">
+          <div class="stat-num" id="statVisible">—</div>
+          <div class="stat-lbl">sur la carte</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="search-wrap">
+      <div class="sidebar-lbl">Recherche</div>
+      <div class="search-inner">
+        <span class="search-icon">⌕</span>
+        <input type="text" id="mapSearch" placeholder="Chocolat, boutique, ville…" oninput="filterList()">
+      </div>
+    </div>
+
+    <div class="tasting-list" id="tastingList">
+      <!-- rempli par JS -->
+    </div>
+
+    {{if .Tastings}}
+    <div class="no-geo-notice" id="noGeoNotice" style="display:none;">
+      <span id="noGeoCount"></span> dégustation(s) sans coordonnées GPS — ajoute un lieu dans la fiche pour les voir sur la carte.
+    </div>
+    {{end}}
+  </aside>
+
+  <!-- Carte -->
+  <div id="map"></div>
+</div>
+
+<!-- Données injectées côté serveur -->
+<script id="tastingsData" type="application/json">
+[{{range $i,$t := .Tastings}}{{if $i}},{{end}}
+{"id":"{{$t.ID}}",
+ "name":"{{$t.ProductName | js}}",
+ "maker":"{{$t.Maker | js}}",
+ "city":"{{$t.City | js}}",
+ "score":"{{fmtScore $t.Score}}",
+ "photo_url":"{{$t.PhotoURL | js}}",
+ "aromas":[{{range $j,$a := $t.AromaNames}}{{if $j}},{{end}}"{{$a | js}}"{{end}}],
+ "lat":{{if $t.Latitude}}{{f64 $t.Latitude}}{{else}}null{{end}},
+ "lng":{{if $t.Longitude}}{{f64 $t.Longitude}}{{else}}null{{end}}
+}{{end}}]
+</script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script>
+/* ── Init données ── */
+let tastings = [];
+try { tastings = JSON.parse(document.getElementById('tastingsData').textContent); } catch(_){}
+
+/* ── Init Leaflet ── */
+const map = L.map('map', { zoomControl: true, preferCanvas: true });
+
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  attribution: '© <a href="https://openstreetmap.org/copyright">OpenStreetMap</a>',
+  maxZoom: 19
+}).addTo(map);
+
+/* ── Marqueurs personnalisés ── */
+const markerLayer = L.layerGroup().addTo(map);
+const markers = {}; // id → L.Marker
+let activeMarkerId = null;
+
+function makeIcon(active){
+  return L.divIcon({
+    html: `<div class="map-marker${active?' active':''}">🍫</div>`,
+    className: '',
+    iconSize: [32, 32],
+    iconAnchor: [16, 16],
+    popupAnchor: [0, -18]
+  });
+}
+
+function buildPopup(t){
+  const scoreHtml = (t.score && parseFloat(t.score)>0) ? `<span class="popup-score">${t.score}/10</span>` : '';
+  const cityHtml  = t.city ? `<span class="popup-city">📍 ${escHtml(t.city)}</span>` : '';
+  const aromasHtml = t.aromas?.length
+    ? `<div class="popup-aromas">${t.aromas.map(a=>`<span class="popup-aroma">${escHtml(a)}</span>`).join('')}</div>` : '';
+
+  const photoHtml = t.photo_url
+    ? `<img class="popup-photo" src="${escHtml(t.photo_url)}" alt="">`
+    : `<div class="popup-photo">🍫</div>`;
+
+  return `
+    ${photoHtml}
+    <div class="popup-body">
+      <div class="popup-name">${escHtml(t.name)}</div>
+      ${t.maker ? `<div class="popup-maker">${escHtml(t.maker)}</div>` : ''}
+      <div class="popup-row">${scoreHtml}${cityHtml}</div>
+      ${aromasHtml}
+      <a class="popup-link" href="/edit?id=${encodeURIComponent(t.id)}">✏️ Modifier la fiche</a>
+    </div>`;
+}
+
+function buildMarkers(list){
+  markerLayer.clearLayers();
+  Object.keys(markers).forEach(k => delete markers[k]);
+
+  let withCoords = 0;
+  list.forEach(t => {
+    if(t.lat == null || t.lng == null) return;
+    withCoords++;
+
+    const m = L.marker([t.lat, t.lng], { icon: makeIcon(false) });
+    m.bindPopup(buildPopup(t), { maxWidth: 220, closeButton: false });
+    m.on('click', () => highlightItem(t.id));
+    markers[t.id] = m;
+    markerLayer.addLayer(m);
+  });
+
+  const statVisible = document.getElementById('statVisible');
+  if(statVisible) statVisible.textContent = withCoords;
+
+  // Fitbounds si on a des marqueurs
+  if(withCoords > 0){
+    const bounds = markerLayer.getLayers().map(m => m.getLatLng());
+    map.fitBounds(L.latLngBounds(bounds), { padding: [40, 40], maxZoom: 13 });
+  } else {
+    map.setView([46.5, 2.3], 5); // France par défaut
+  }
+}
+
+/* ── Sidebar liste ── */
+function buildList(list){
+  const container = document.getElementById('tastingList');
+  if(!container) return;
+  container.innerHTML = '';
+
+  let noGeoCount = 0;
+  list.forEach(t => {
+    if(t.lat == null || t.lng == null) noGeoCount++;
+
+    const item = document.createElement('div');
+    item.className = 'tasting-item' + (t.lat == null ? ' no-coords' : '');
+    item.dataset.id = t.id;
+    item.setAttribute('role','button');
+    item.setAttribute('tabindex','0');
+
+    const scoreHtml = (t.score && parseFloat(t.score)>0)
+      ? `<span class="ti-score">${t.score}/10</span>` : '';
+    const cityHtml  = t.city ? `<span class="ti-city">📍 ${escHtml(t.city)}</span>` : '';
+    const geoHtml   = (t.lat == null) ? `<span class="ti-no-geo">pas de coordonnées</span>` : '';
+
+    item.innerHTML = `
+      <div class="ti-thumb">${t.photo_url ? `<img src="${escHtml(t.photo_url)}" alt="">` : '🍫'}</div>
+      <div class="ti-body">
+        <div class="ti-name">${escHtml(t.name)}</div>
+        <div class="ti-meta">${scoreHtml}${cityHtml}${geoHtml}</div>
+      </div>`;
+
+    item.onclick = () => { if(t.lat != null) focusMarker(t.id); };
+    item.onkeydown = e => { if(e.key==='Enter' && t.lat != null) focusMarker(t.id); };
+    container.appendChild(item);
+  });
+
+  const noGeoNotice = document.getElementById('noGeoNotice');
+  const noGeoCountEl = document.getElementById('noGeoCount');
+  if(noGeoNotice){
+    noGeoNotice.style.display = noGeoCount > 0 ? '' : 'none';
+    if(noGeoCountEl) noGeoCountEl.textContent = noGeoCount;
+  }
+}
+
+function focusMarker(id){
+  const m = markers[id];
+  if(!m) return;
+  map.flyTo(m.getLatLng(), 14, { duration: 0.8 });
+  m.openPopup();
+  highlightItem(id);
+}
+
+function highlightItem(id){
+  activeMarkerId = id;
+  // Mettre à jour l'icône
+  Object.entries(markers).forEach(([mid, m]) => {
+    m.setIcon(makeIcon(mid === id));
+  });
+  // Scroll la sidebar
+  const item = document.querySelector(`.tasting-item[data-id="${id}"]`);
+  if(item){
+    item.classList.add('highlighted');
+    item.scrollIntoView({ behavior:'smooth', block:'nearest' });
+    setTimeout(() => item.classList.remove('highlighted'), 2000);
+  }
+}
+
+/* ── Filtre recherche ── */
+let filteredTastings = [...tastings];
+
+function filterList(){
+  const q = (document.getElementById('mapSearch')?.value || '').toLowerCase().trim();
+  filteredTastings = !q ? [...tastings] : tastings.filter(t =>
+    (t.name||'').toLowerCase().includes(q) ||
+    (t.maker||'').toLowerCase().includes(q) ||
+    (t.city||'').toLowerCase().includes(q) ||
+    (t.aromas||[]).some(a => a.toLowerCase().includes(q))
+  );
+  buildList(filteredTastings);
+  buildMarkers(filteredTastings);
+}
+
+/* ── Utilitaire ── */
+function escHtml(s){
+  return String(s||'').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+/* ── Init ── */
+buildList(tastings);
+buildMarkers(tastings);
+</script>
+
+<!-- Barre navigation mobile — onglet Carte actif -->
+<nav class="bottom-nav">
+  <a class="bottom-nav-item" href="/">
+    <span class="nav-icon">📓</span>
+    <span>Journal</span>
+  </a>
+  <a class="bottom-nav-item active" href="/map">
+    <span class="nav-icon">🗺️</span>
+    <span>Carte</span>
+  </a>
+  <a class="bottom-nav-item" href="/collections">
+    <span class="nav-icon">📁</span>
+    <span>Collections</span>
+  </a>
+  <a class="bottom-nav-item bottom-nav-add" href="/">
+    <span class="nav-icon">＋</span>
+    <span>Ajouter</span>
+  </a>
+</nav>
+
+</body>
+</html>

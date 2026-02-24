@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Modifier — {{.Tasting.ProductName}}</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,400&family=Instrument+Sans:wght@400;500;600&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --cacao:#2C1810;--cacao-md:#4A2C1A;--cacao-lt:#7A4528;
+  --caramel:#C4843A;
+  --cream:#FBF6EF;--cream-dk:#EDE4D7;--cream-md:#E2D5C3;
+  --muted:#7A6248;--white:#FFFFFF;--text:#1C0F08;
+  --shadow:0 8px 32px rgba(44,24,16,.10);
+  --radius:14px;--tap:44px;
+}
+body{background:var(--cream);color:var(--text);font-family:'Instrument Sans',sans-serif;min-height:100vh;-webkit-font-smoothing:antialiased;}
+
+nav{
+  position:fixed;top:0;left:0;right:0;z-index:100;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 20px;height:60px;padding-top:env(safe-area-inset-top);
+  background:rgba(251,246,239,.96);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+  border-bottom:1px solid var(--cream-dk);
+}
+.logo{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:600;color:var(--cacao);display:flex;align-items:center;gap:10px;}
+.logo-dot{width:8px;height:8px;border-radius:50%;background:var(--caramel);animation:pulse 2.4s ease-in-out infinite;}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.4);opacity:.7}}
+.btn-ghost{
+  display:flex;align-items:center;gap:6px;
+  padding:0 14px;height:var(--tap);
+  background:transparent;border:1.5px solid var(--cream-dk);border-radius:10px;
+  font-size:13px;color:var(--muted);cursor:pointer;transition:all .2s;text-decoration:none;
+}
+.btn-ghost:hover{border-color:var(--caramel);color:var(--caramel);}
+
+.page{padding:80px 20px 60px;max-width:620px;margin:0 auto;}
+.page-title{font-family:'Cormorant Garamond',serif;font-size:32px;font-weight:300;color:var(--cacao);margin-bottom:4px;}
+.page-title em{font-style:italic;color:var(--caramel);}
+.page-sub{font-size:13px;color:var(--muted);margin-bottom:22px;}
+
+.card-form{background:var(--white);border-radius:var(--radius);border:1px solid rgba(44,24,16,.07);box-shadow:var(--shadow);overflow:hidden;}
+.form-section{padding:22px 24px;border-bottom:1px solid var(--cream-dk);}
+.form-section:last-child{border-bottom:none;}
+.section-lbl{font-family:'DM Mono',monospace;font-size:9px;text-transform:uppercase;letter-spacing:.14em;color:var(--muted);margin-bottom:14px;}
+
+.mode-toggle{display:flex;border:1.5px solid var(--cream-dk);border-radius:10px;overflow:hidden;margin-bottom:16px;}
+.mode-btn{flex:1;height:var(--tap);border:none;background:transparent;font-size:13px;cursor:pointer;color:var(--muted);transition:all .2s;font-family:inherit;}
+.mode-btn.active{background:var(--cacao);color:var(--cream);font-weight:600;}
+
+.field{margin-bottom:14px;}
+.field:last-child{margin-bottom:0;}
+.field label{display:block;font-family:'DM Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:6px;}
+.field input,.field textarea{
+  width:100%;height:var(--tap);padding:0 14px;
+  border:1.5px solid var(--cream-dk);border-radius:10px;background:var(--cream);
+  font-size:15px;color:var(--text);outline:none;transition:border-color .2s;font-family:inherit;
+}
+.field textarea{height:auto;padding:12px 14px;resize:none;}
+.field input::placeholder,.field textarea::placeholder{color:var(--muted);}
+.field input:focus,.field textarea:focus{border-color:var(--caramel);background:var(--white);}
+.field input[type="file"]{height:auto;padding:10px 14px;font-size:13px;}
+
+.current-photo{width:100%;max-height:180px;object-fit:cover;border-radius:10px;border:1.5px solid var(--cream-dk);display:block;margin-bottom:10px;}
+
+.score-row{display:flex;align-items:center;gap:14px;}
+.score-row input[type=range]{
+  flex:1;-webkit-appearance:none;height:5px;
+  background:linear-gradient(to right,var(--caramel) var(--pct,60%),var(--cream-dk) var(--pct,60%));
+  border-radius:3px;outline:none;padding:0;border:none;cursor:pointer;
+}
+.score-row input[type=range]::-webkit-slider-thumb{
+  -webkit-appearance:none;width:24px;height:24px;border-radius:50%;
+  background:var(--caramel);cursor:pointer;box-shadow:0 2px 8px rgba(196,132,58,.5);border:2px solid var(--white);
+}
+.score-val{font-family:'Cormorant Garamond',serif;font-size:32px;font-weight:300;color:var(--cacao);min-width:44px;text-align:right;}
+
+.aroma-family{margin-bottom:12px;}
+.aroma-family:last-child{margin-bottom:0;}
+.aroma-family-name{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:6px;}
+.aroma-btns{display:flex;flex-wrap:wrap;gap:5px;}
+.aroma-btn{
+  padding:5px 12px;border-radius:20px;border:1.5px solid var(--cream-dk);
+  background:var(--white);font-size:12px;color:var(--cacao-lt);cursor:pointer;transition:all .15s;font-family:inherit;
+}
+.aroma-btn:hover{border-color:var(--caramel);color:var(--caramel);}
+.aroma-btn.sel{border-color:var(--caramel);background:rgba(196,132,58,.1);color:var(--caramel);}
+
+.geo-result-btn{
+  width:100%;text-align:left;padding:8px 12px;margin-bottom:4px;
+  background:var(--cream);border:1.5px solid var(--cream-dk);border-radius:8px;
+  font-size:12px;color:var(--cacao-md);cursor:pointer;transition:all .15s;font-family:inherit;
+}
+.geo-result-btn:hover{border-color:var(--caramel);}
+.geo-picked{font-size:12px;color:var(--caramel);margin-top:6px;}
+.chip{
+  padding:0 14px;height:36px;display:inline-flex;align-items:center;
+  border-radius:20px;border:1.5px solid var(--cream-dk);
+  background:transparent;font-size:12px;color:var(--muted);cursor:pointer;transition:all .15s;font-family:inherit;
+}
+.chip:hover{border-color:var(--caramel);color:var(--caramel);}
+
+.form-actions{padding:20px 24px;display:flex;gap:10px;align-items:center;}
+.btn-save{
+  flex:1;height:52px;background:var(--cacao);color:var(--cream);
+  border:none;border-radius:12px;font-size:15px;font-weight:600;cursor:pointer;transition:all .2s;font-family:inherit;
+}
+.btn-save:hover{background:var(--cacao-md);}
+.btn-save:active{transform:scale(.98);}
+.btn-back{
+  height:52px;padding:0 20px;
+  background:transparent;border:1.5px solid var(--cream-dk);border-radius:12px;
+  font-size:14px;color:var(--muted);cursor:pointer;text-decoration:none;
+  display:flex;align-items:center;transition:all .2s;font-family:inherit;
+}
+.btn-back:hover{border-color:var(--caramel);color:var(--caramel);}
+
+@media(max-width:600px){
+  .page{padding:76px 14px 48px;}
+  .form-section{padding:18px 16px;}
+  .form-actions{padding:16px;}
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="logo"><div class="logo-dot"></div>Cacao</div>
+  <a class="btn-ghost" href="javascript:history.back()">← Retour</a>
+</nav>
+
+<div class="page">
+  <div class="page-title">Modifier <em>{{.Tasting.ProductName}}</em></div>
+  <div class="page-sub">Complète ou corrige les informations de cette dégustation</div>
+
+  <div class="card-form">
+    <form id="editForm" method="POST" action="/update" enctype="multipart/form-data" onsubmit="prepareAromas()">
+
+      <input type="hidden" name="id"        value="{{.Tasting.ID}}">
+      <input type="hidden" name="mode"      id="modeInput" value="{{.Tasting.Mode}}">
+      <input type="hidden" name="latitude"  id="latEdit"   value="{{with .Tasting.Latitude}}{{printf "%.8f" .}}{{end}}">
+      <input type="hidden" name="longitude" id="lngEdit"   value="{{with .Tasting.Longitude}}{{printf "%.8f" .}}{{end}}">
+
+      <!-- Infos principales -->
+      <div class="form-section">
+        <div class="section-lbl">Informations</div>
+
+        <div class="mode-toggle">
+          <button type="button" class="mode-btn {{if eq .Tasting.Mode "quick"}}active{{end}}" onclick="setMode('quick',this)">⚡ Rapide</button>
+          <button type="button" class="mode-btn {{if eq .Tasting.Mode "deep"}}active{{end}}" onclick="setMode('deep',this)">🔬 Approfondie</button>
+        </div>
+
+        <div class="field">
+          <label>Chocolat ou pâtisserie *</label>
+          <input type="text" name="product_name" value="{{.Tasting.ProductName}}" required autofocus>
+        </div>
+        <div class="field">
+          <label>Boutique · Maison</label>
+          <input type="text" name="maker" value="{{.Tasting.Maker}}">
+        </div>
+        <div class="field" style="margin:0">
+          <label>Ville</label>
+          <input type="text" name="city" id="cityEdit" value="{{.Tasting.City}}">
+        </div>
+      </div>
+
+      <!-- Note -->
+      <div class="form-section">
+        <div class="section-lbl">Note</div>
+        <div class="field" style="margin:0">
+          <label>Note globale — <span id="scoreLabel">{{fmtScore .Tasting.Score}}</span>/10</label>
+          <div class="score-row">
+            <input type="range" min="1" max="10" step="0.1"
+                   value="{{fmtScore .Tasting.Score}}"
+                   name="score" id="scoreRange" oninput="updateScore(this)">
+            <div class="score-val" id="scoreVal">{{fmtScore .Tasting.Score}}</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Photo -->
+      <div class="form-section">
+        <div class="section-lbl">Photo</div>
+        {{if .Tasting.PhotoURL}}
+          <img src="{{.Tasting.PhotoURL}}" alt="Photo actuelle" class="current-photo">
+          <div style="font-size:12px;color:var(--muted);margin-bottom:10px;">Photo actuelle — remplace-la si besoin</div>
+        {{end}}
+        <div class="field" style="margin:0">
+          <label>{{if .Tasting.PhotoURL}}Remplacer{{else}}Ajouter une photo{{end}} <span style="font-size:10px;">(optionnel)</span></label>
+          <input type="file" name="photo" accept="image/*" capture="environment">
+        </div>
+      </div>
+
+      <!-- Localisation -->
+      <div class="form-section">
+        <div class="section-lbl">Localisation</div>
+        <div class="field">
+          <label>Recherche de lieu</label>
+          <input type="text" id="placeQueryEdit" placeholder="Tape une ville ou une adresse…">
+          <div id="placeResultsEdit" style="margin-top:6px;"></div>
+          <div class="geo-picked" id="placePickedEdit"></div>
+        </div>
+        <div style="display:flex;gap:8px;margin:0">
+          <button type="button" class="chip" onclick="useMyPositionEdit()">📍 Ma position</button>
+          <button type="button" class="chip" onclick="clearPositionEdit()">🧹 Effacer</button>
+        </div>
+      </div>
+
+      <!-- Arômes -->
+      <div class="form-section">
+        <div class="section-lbl">Arômes perçus</div>
+        <div style="display:flex;flex-direction:column;gap:12px;">
+          {{$currentFamily := ""}}
+          {{range .Aromas}}
+            {{if ne .Family $currentFamily}}
+              {{if ne $currentFamily ""}}</div></div>{{end}}
+              <div class="aroma-family">
+                <div class="aroma-family-name">{{.Family}}</div>
+                <div class="aroma-btns">
+              {{$currentFamily = .Family}}
+            {{end}}
+            <button type="button" class="aroma-btn" data-id="{{.ID}}" onclick="toggleAroma(this)">{{.Name}}</button>
+          {{end}}
+          {{if ne $currentFamily ""}}</div></div>{{end}}
+        </div>
+      </div>
+
+      <!-- Notes -->
+      <div class="form-section">
+        <div class="section-lbl">Notes libres</div>
+        <div class="field" style="margin:0">
+          <textarea name="notes" rows="4" placeholder="Tes impressions, ce que tu retiens…">{{.Tasting.Notes}}</textarea>
+        </div>
+      </div>
+
+      <div class="form-actions">
+        <a href="javascript:history.back()" class="btn-back">Annuler</a>
+        <button type="submit" class="btn-save">Enregistrer les modifications</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div id="preselectedAromas"
+     data-ids="{{range $i,$v := .Tasting.AromaIDs}}{{if $i}},{{end}}{{.}}{{end}}"
+     style="display:none"></div>
+
+<script>
+/* ── Arômes ── */
+const preselEl = document.getElementById('preselectedAromas');
+const csv = preselEl ? (preselEl.dataset.ids || '') : '';
+const preselected = new Set(csv ? csv.split(',').map(s=>s.trim()).filter(Boolean) : []);
+const selectedAromas = new Set(preselected);
+
+function setMode(m, btn){
+  document.querySelectorAll('.mode-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('modeInput').value = m;
+}
+
+function updateScore(input){
+  const v = parseFloat(input.value).toFixed(1).replace('.0','');
+  document.getElementById('scoreLabel').textContent = v;
+  document.getElementById('scoreVal').textContent = v;
+  input.style.setProperty('--pct', ((input.value-1)/9*100).toFixed(1)+'%');
+}
+
+function toggleAroma(btn){
+  const id = btn.dataset.id;
+  if(selectedAromas.has(id)){ selectedAromas.delete(id); btn.classList.remove('sel'); }
+  else{ selectedAromas.add(id); btn.classList.add('sel'); }
+}
+
+function prepareAromas(){
+  const form = document.getElementById('editForm');
+  if(!form) return;
+  form.querySelectorAll('input[name="aroma_ids"]').forEach(i=>i.remove());
+  selectedAromas.forEach(id=>{
+    const inp = document.createElement('input');
+    inp.type='hidden'; inp.name='aroma_ids'; inp.value=id;
+    form.appendChild(inp);
+  });
+}
+
+/* Init slider + pré-sélection visuelle */
+const scoreRange = document.getElementById('scoreRange');
+if(scoreRange) updateScore(scoreRange);
+document.querySelectorAll('.aroma-btn[data-id]').forEach(btn=>{
+  if(preselected.has(btn.dataset.id)) btn.classList.add('sel');
+});
+
+/* ── Géo via proxy backend ── */
+let placeTimerEdit = null;
+
+function setCoordsEdit(lat, lng, label){
+  document.getElementById('latEdit').value = lat;
+  document.getElementById('lngEdit').value = lng;
+  const picked = document.getElementById('placePickedEdit');
+  if(picked) picked.textContent = label ? `📌 ${label}` : '📌 Position enregistrée';
+  const cityInput = document.getElementById('cityEdit');
+  if(cityInput && !cityInput.value && label) cityInput.value = label.split(',')[0].trim();
+}
+
+function clearPositionEdit(){
+  document.getElementById('latEdit').value = '';
+  document.getElementById('lngEdit').value = '';
+  const picked = document.getElementById('placePickedEdit');
+  if(picked) picked.textContent = '';
+  const results = document.getElementById('placeResultsEdit');
+  if(results) results.innerHTML = '';
+  const q = document.getElementById('placeQueryEdit');
+  if(q) q.value = '';
+}
+
+async function searchPlaceEdit(q){
+  const results = document.getElementById('placeResultsEdit');
+  if(!results || !q || q.length < 3){ if(results) results.innerHTML=''; return; }
+  results.innerHTML = '';
+  try{
+    const r = await fetch('/api/geo/search?q='+encodeURIComponent(q), {headers:{'Accept':'application/json'}});
+    if(!r.ok) return;
+    const data = await r.json();
+    if(!data || !data.length){ results.innerHTML='<div style="font-size:12px;color:var(--muted);">Aucun résultat.</div>'; return; }
+    data.forEach(item=>{
+      const btn = document.createElement('button');
+      btn.type='button'; btn.className='geo-result-btn';
+      btn.textContent = item.display_name;
+      btn.onclick = ()=>{
+        setCoordsEdit(parseFloat(item.lat), parseFloat(item.lon), item.display_name);
+        results.innerHTML='';
+        document.getElementById('placeQueryEdit').value='';
+      };
+      results.appendChild(btn);
+    });
+  }catch(_){}
+}
+
+const placeQueryEdit = document.getElementById('placeQueryEdit');
+if(placeQueryEdit){
+  placeQueryEdit.addEventListener('input', ()=>{
+    clearTimeout(placeTimerEdit);
+    placeTimerEdit = setTimeout(()=>searchPlaceEdit(placeQueryEdit.value), 350);
+  });
+}
+
+function useMyPositionEdit(){
+  if(!navigator.geolocation) return;
+  navigator.geolocation.getCurrentPosition(async pos=>{
+    const {latitude:lat, longitude:lng} = pos.coords;
+    try{
+      const r = await fetch(`/api/geo/reverse?lat=${lat}&lon=${lng}`, {headers:{'Accept':'application/json'}});
+      const data = await r.json();
+      const city = data?.address?.city || data?.address?.town || data?.address?.village || '';
+      setCoordsEdit(lat, lng, city || `${lat.toFixed(4)}, ${lng.toFixed(4)}`);
+      const cityInput = document.getElementById('cityEdit');
+      if(cityInput && !cityInput.value && city) cityInput.value = city;
+    }catch(_){ setCoordsEdit(lat, lng, 'Position actuelle'); }
+  }, ()=>{}, {enableHighAccuracy:false, timeout:8000, maximumAge:600000});
+}
+
+/* Affiche les coordonnées déjà enregistrées */
+(function(){
+  const lat = (document.getElementById('latEdit')?.value||'').trim();
+  const lng = (document.getElementById('lngEdit')?.value||'').trim();
+  if(lat && lng){
+    const picked = document.getElementById('placePickedEdit');
+    if(picked) picked.textContent = `📌 Position enregistrée : ${parseFloat(lat).toFixed(4)}, ${parseFloat(lng).toFixed(4)}`;
+  }
+})();
+</script>
+</body>
+</html>

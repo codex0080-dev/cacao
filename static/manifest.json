@@ -1,0 +1,16 @@
+{
+  "name": "Cacao — Journal de dégustation",
+  "short_name": "Cacao",
+  "description": "Ton journal de dégustations chocolat & pâtisserie",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#FBF6EF",
+  "theme_color": "#2C1810",
+  "orientation": "portrait",
+ "icons": [
+  { "src": "/static/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+  { "src": "/static/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+],
+  "categories": ["food", "lifestyle", "productivity"],
+  "lang": "fr"
+}

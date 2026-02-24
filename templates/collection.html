@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>{{.Collection.Emoji}} {{.Collection.Name}} — Cacao</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,400&family=Instrument+Sans:wght@400;500;600&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --cacao:#2C1810;--cacao-md:#4A2C1A;--cacao-lt:#7A4528;
+  --caramel:#C4843A;--caramel-dk:#A86828;
+  --cream:#FBF6EF;--cream-dk:#EDE4D7;--cream-md:#E2D5C3;
+  --muted:#7A6248;--white:#FFFFFF;--text:#1C0F08;
+  --shadow:0 8px 32px rgba(44,24,16,.10);
+  --shadow-lg:0 16px 48px rgba(44,24,16,.16);
+  --radius:14px;--tap:44px;
+}
+body{background:var(--cream);color:var(--text);font-family:'Instrument Sans',sans-serif;min-height:100vh;-webkit-font-smoothing:antialiased;}
+body.modal-open{overflow:hidden;}
+
+/* ── NAV ── */
+nav{
+  position:fixed;top:0;left:0;right:0;z-index:100;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 20px;height:60px;
+  padding-top:env(safe-area-inset-top);
+  background:rgba(251,246,239,.96);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+  border-bottom:1px solid var(--cream-dk);
+}
+.logo{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:600;color:var(--cacao);display:flex;align-items:center;gap:10px;}
+.logo-dot{width:8px;height:8px;border-radius:50%;background:var(--caramel);animation:pulse 2.4s ease-in-out infinite;}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.4);opacity:.7}}
+
+.nav-actions{display:flex;gap:8px;align-items:center;}
+.btn-ghost{
+  display:flex;align-items:center;gap:6px;
+  padding:0 14px;height:var(--tap);min-width:var(--tap);
+  background:transparent;border:1.5px solid var(--cream-dk);border-radius:10px;
+  font-size:13px;color:var(--muted);cursor:pointer;transition:all .2s;text-decoration:none;
+}
+.btn-ghost:hover{border-color:var(--caramel);color:var(--caramel);}
+.btn-danger-sm{
+  display:flex;align-items:center;gap:6px;
+  padding:0 14px;height:var(--tap);
+  background:transparent;border:1.5px solid rgba(160,0,0,.18);border-radius:10px;
+  font-size:13px;color:#8b1a1a;cursor:pointer;transition:all .2s;
+}
+.btn-danger-sm:hover{background:rgba(160,0,0,.07);}
+
+/* ── PAGE ── */
+.page{padding:80px 20px 48px;max-width:1100px;margin:0 auto;}
+
+/* Hero collection */
+.coll-hero{
+  display:flex;align-items:flex-start;gap:20px;
+  padding:28px 28px;
+  background:var(--white);border:1px solid rgba(44,24,16,.07);
+  border-radius:20px;margin-bottom:28px;
+  box-shadow:var(--shadow);
+}
+.coll-emoji{
+  font-size:52px;line-height:1;flex-shrink:0;
+  width:80px;height:80px;display:flex;align-items:center;justify-content:center;
+  background:var(--cream);border-radius:16px;border:1px solid var(--cream-dk);
+}
+.coll-info{flex:1;}
+.coll-name{
+  font-family:'Cormorant Garamond',serif;font-size:34px;font-weight:300;
+  color:var(--cacao);line-height:1.1;margin-bottom:6px;
+}
+.coll-meta{display:flex;gap:12px;flex-wrap:wrap;margin-top:10px;}
+.meta-pill{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:5px 12px;border-radius:20px;border:1.5px solid var(--cream-dk);
+  background:var(--cream);font-size:12px;color:var(--muted);
+}
+.meta-pill strong{color:var(--cacao);font-weight:600;}
+
+.coll-actions{display:flex;gap:8px;align-items:flex-start;flex-shrink:0;}
+
+/* Titre section */
+.section-title{
+  font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:300;color:var(--cacao);
+  margin-bottom:14px;display:flex;align-items:center;gap:10px;
+}
+.section-title em{font-style:italic;color:var(--caramel);font-size:16px;}
+
+/* Grid cartes */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px;}
+.card{
+  background:var(--white);border-radius:var(--radius);overflow:hidden;
+  border:1px solid rgba(44,24,16,.07);cursor:pointer;
+  transition:all .22s;animation:fadeUp .4s ease both;
+}
+.card:hover{transform:translateY(-3px);box-shadow:var(--shadow-lg);}
+.card:focus{outline:3px solid rgba(196,132,58,.5);outline-offset:2px;}
+.card:active{transform:scale(.99);}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+
+.card-photo{height:130px;display:flex;align-items:center;justify-content:center;font-size:44px;position:relative;overflow:hidden;}
+.card-badge{position:absolute;top:10px;right:10px;padding:4px 9px;border-radius:6px;font-family:'DM Mono',monospace;font-size:10px;}
+.badge-deep{background:var(--cacao);color:var(--cream);}
+.badge-quick{background:rgba(251,246,239,.93);color:var(--cacao-md);}
+.card-score{
+  position:absolute;bottom:10px;left:10px;
+  background:rgba(251,246,239,.95);backdrop-filter:blur(8px);
+  border-radius:8px;padding:3px 10px;
+  display:flex;align-items:baseline;gap:2px;
+  border:1px solid rgba(44,24,16,.08);
+}
+.score-n{font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:600;line-height:1;color:var(--cacao);}
+.score-d{font-size:9px;color:var(--muted);font-family:'DM Mono',monospace;}
+
+.card-body{padding:14px 16px;}
+.card-name{font-family:'Cormorant Garamond',serif;font-size:19px;color:var(--cacao);margin-bottom:2px;line-height:1.2;}
+.card-maker{font-size:12px;color:var(--muted);margin-bottom:8px;}
+.card-aromas{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px;}
+.aroma-tag{padding:3px 9px;background:var(--cream);border-radius:6px;font-size:11px;color:var(--cacao-lt);font-family:'DM Mono',monospace;}
+.card-notes{font-size:13px;color:var(--muted);margin-bottom:8px;font-style:italic;line-height:1.45;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+.card-meta{display:flex;justify-content:space-between;align-items:center;padding-top:10px;border-top:1px solid var(--cream-dk);}
+.card-city{font-size:11px;color:var(--muted);}
+.card-date{font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);}
+
+/* Action retirer */
+.card-remove{
+  position:absolute;top:10px;left:10px;
+  width:28px;height:28px;border-radius:50%;
+  background:rgba(251,246,239,.9);border:1px solid rgba(44,24,16,.1);
+  color:#8b1a1a;font-size:13px;cursor:pointer;
+  display:none;align-items:center;justify-content:center;
+  transition:all .2s;
+}
+.card:hover .card-remove{display:flex;}
+.card-remove:hover{background:rgba(160,0,0,.08);}
+
+@media (hover: none){
+  .card-remove{display:flex;}
+}
+
+/* Empty */
+.empty{text-align:center;padding:80px 20px;color:var(--muted);}
+.empty-icon{font-size:48px;margin-bottom:16px;opacity:.4;}
+.empty p{font-family:'Cormorant Garamond',serif;font-size:20px;font-style:italic;}
+.empty a{
+  display:inline-flex;margin-top:20px;padding:0 20px;height:var(--tap);
+  align-items:center;background:var(--cacao);color:var(--cream);
+  border-radius:10px;font-size:14px;font-weight:600;text-decoration:none;
+  transition:all .2s;
+}
+.empty a:hover{background:var(--cacao-md);}
+
+/* DETAIL MODAL */
+.overlay{
+  position:fixed;inset:0;z-index:300;background:rgba(28,15,8,.55);
+  backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+  display:flex;align-items:flex-end;justify-content:center;
+  opacity:0;pointer-events:none;transition:opacity .25s;
+}
+.overlay.open{opacity:1;pointer-events:all;}
+.modal{
+  width:100%;max-width:560px;background:var(--white);
+  border-radius:20px 20px 0 0;
+  padding:20px 20px calc(20px + env(safe-area-inset-bottom));
+  transform:translateY(100%);transition:transform .35s cubic-bezier(.4,0,.2,1);
+  max-height:92vh;overflow-y:auto;box-shadow:0 -8px 40px rgba(44,24,16,.18);
+}
+.overlay.open .modal{transform:translateY(0);}
+.modal-handle{width:40px;height:4px;background:var(--cream-md);border-radius:2px;margin:0 auto 18px;}
+.field{margin-bottom:14px;}
+.field label{display:block;font-family:'DM Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:6px;}
+.det-hero{height:160px;border-radius:12px;overflow:hidden;background:linear-gradient(135deg,#2a1209,#6b3020);position:relative;margin-bottom:14px;}
+.det-title{font-family:'Cormorant Garamond',serif;font-size:27px;color:var(--cacao);line-height:1.15;margin-bottom:6px;}
+.det-sub{color:var(--muted);font-size:14px;margin-bottom:10px;}
+.det-pill-row{display:flex;gap:7px;flex-wrap:wrap;margin:10px 0 14px;}
+.pill{display:inline-flex;align-items:center;gap:7px;padding:6px 12px;border-radius:999px;border:1px solid var(--cream-dk);background:var(--cream);color:var(--muted);font-size:12px;}
+.pill strong{font-weight:600;color:var(--cacao);}
+.det-notes{background:var(--cream);border:1px solid var(--cream-dk);border-radius:12px;padding:14px;font-size:14px;color:var(--cacao-md);line-height:1.6;}
+.det-notes em{color:var(--muted);}
+.det-actions{display:flex;gap:10px;margin-top:14px;}
+.det-actions .btn-ghost{flex:1;justify-content:center;}
+.btn-danger{flex:1;display:flex;justify-content:center;align-items:center;gap:6px;height:var(--tap);border-radius:10px;border:1.5px solid rgba(160,0,0,.2);background:rgba(160,0,0,.05);color:#8b1a1a;cursor:pointer;transition:all .2s;font-size:13px;}
+.btn-danger:hover{background:rgba(160,0,0,.10);}
+.btn-cancel{background:none;border:none;color:var(--muted);font-size:14px;cursor:pointer;display:block;margin:14px auto 0;padding:8px 20px;min-height:40px;}
+.cream-md{background:var(--cream-md);}
+
+@media(max-width:700px){
+  .coll-hero{flex-direction:column;gap:14px;}
+  .coll-actions{width:100%;}
+  .grid{grid-template-columns:1fr;}
+}
+
+/* ── BARRE NAV MOBILE ── */
+.bottom-nav{
+  display:none;position:fixed;bottom:0;left:0;right:0;z-index:200;
+  background:rgba(251,246,239,.97);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+  border-top:1px solid var(--cream-dk);padding-bottom:env(safe-area-inset-bottom);
+  grid-template-columns:repeat(4,1fr);
+}
+.bottom-nav-item{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:3px;padding:10px 4px 8px;font-size:10px;font-weight:500;color:var(--muted);
+  text-decoration:none;background:none;border:none;cursor:pointer;
+  font-family:'Instrument Sans',sans-serif;transition:color .15s;
+  -webkit-tap-highlight-color:transparent;
+}
+.bottom-nav-item .nav-icon{font-size:20px;line-height:1;}
+.bottom-nav-item.active{color:var(--cacao);}
+.bottom-nav-item:active{transform:scale(.92);}
+.bottom-nav-add{color:var(--caramel);font-weight:600;}
+.bottom-nav-add .nav-icon{
+  background:var(--cacao);color:var(--cream);
+  width:36px;height:36px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:22px;box-shadow:0 3px 12px rgba(44,24,16,.25);margin-bottom:1px;
+}
+@media(max-width:900px){
+  .bottom-nav{display:grid;}
+  .page{padding-bottom:calc(84px + env(safe-area-inset-bottom)) !important;}
+}
+</style>
+</head>
+
+<body>
+<nav>
+  <div class="nav-left">
+    <div class="logo"><div class="logo-dot"></div>Cacao</div>
+  </div>
+  <div class="nav-actions">
+    <a class="btn-ghost" href="/">← Bibliothèque</a>
+    <form method="POST" action="/collections/delete"
+          onsubmit="return confirm('Supprimer cette collection ? Les dégustations ne seront pas supprimées.')"
+          style="margin:0">
+      <input type="hidden" name="id" value="{{.Collection.ID}}">
+      <button type="submit" class="btn-danger-sm">🗑️ Supprimer</button>
+    </form>
+  </div>
+</nav>
+
+<div class="page">
+
+  <!-- Hero collection -->
+  <div class="coll-hero">
+    <div class="coll-emoji">{{.Collection.Emoji}}</div>
+    <div class="coll-info">
+      <div class="coll-name">{{.Collection.Name}}</div>
+      <div class="coll-meta">
+        <span class="meta-pill"><strong>{{len .Tastings}}</strong> dégustation{{if gt (len .Tastings) 1}}s{{end}}</span>
+        {{if .AvgScore}}<span class="meta-pill">Note moyenne <strong>{{.AvgScore}}/10</strong></span>{{end}}
+        {{if .TopCity}}<span class="meta-pill">📍 <strong>{{.TopCity}}</strong></span>{{end}}
+      </div>
+    </div>
+  </div>
+
+  <!-- Section dégustations -->
+  <div class="section-title">
+    Dégustations liées
+    <em>/ {{len .Tastings}} entrées</em>
+  </div>
+
+  {{if .Tastings}}
+  <div class="grid">
+    {{range .Tastings}}
+    <div class="card" role="button" tabindex="0"
+         onclick="openDetail(this)"
+         onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openDetail(this)}">
+
+      <div class="card-photo" style="background:linear-gradient(135deg,#2a1209,#6b3020);">
+        {{if .PhotoURL}}
+          <img src="{{.PhotoURL}}" alt=""
+               style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0;pointer-events:none;">
+        {{else}}
+          🍫
+        {{end}}
+
+        <div class="card-badge {{if eq .Mode "deep"}}badge-deep{{else}}badge-quick{{end}}">
+          {{if eq .Mode "deep"}}Approfondie{{else}}Rapide{{end}}
+        </div>
+
+        {{if .Score}}
+        <div class="card-score">
+          <span class="score-n">{{fmtScore .Score}}</span>
+          <span class="score-d">/10</span>
+        </div>
+        {{end}}
+
+        <!-- Bouton retirer de la collection -->
+        <form method="POST" action="/collections/remove" style="position:absolute;top:10px;left:10px;" onclick="event.stopPropagation()">
+          <input type="hidden" name="collection_id" value="{{$.Collection.ID}}">
+          <input type="hidden" name="tasting_id" value="{{.ID}}">
+          <button type="submit" class="card-remove" title="Retirer de la collection"
+                  onclick="return confirm('Retirer cette dégustation de la collection ?')">✕</button>
+        </form>
+      </div>
+
+      <div class="card-body">
+        <div class="card-name">{{.ProductName}}</div>
+        {{if .Maker}}<div class="card-maker">{{.Maker}}</div>{{end}}
+
+        {{if .AromaNames}}
+        <div class="card-aromas">
+          {{range .AromaNames}}<span class="aroma-tag">{{.}}</span>{{end}}
+        </div>
+        {{end}}
+
+        {{if .Notes}}<div class="card-notes">{{.Notes}}</div>{{end}}
+
+        <div class="card-meta">
+          <span class="card-city">{{if .City}}📍 {{.City}}{{end}}</span>
+          <span class="card-date">{{.CreatedAt.Format "02 jan. 2006"}}</span>
+        </div>
+      </div>
+
+      <script type="application/json" class="card-data">
+{"id":"{{.ID}}",
+ "name":"{{.ProductName | js}}",
+ "maker":"{{.Maker | js}}",
+ "city":"{{.City | js}}",
+ "score":"{{fmtScore .Score}}",
+ "mode":"{{.Mode}}",
+ "notes":"{{.Notes | js}}",
+ "photo_url":"{{.PhotoURL | js}}",
+ "date":"{{.CreatedAt.Format "02 janvier 2006" | js}}",
+ "aromas":[{{range $i,$a := .AromaNames}}{{if $i}},{{end}}"{{ $a | js }}"{{end}}]
+}
+      </script>
+    </div>
+    {{end}}
+  </div>
+
+  {{else}}
+  <div class="empty">
+    <div class="empty-icon">{{.Collection.Emoji}}</div>
+    <p>Cette collection est encore vide</p>
+    <a href="/">Ajouter des dégustations →</a>
+  </div>
+  {{end}}
+
+</div>
+
+<!-- DETAIL SHEET (réutilisé depuis index) -->
+<div class="overlay" id="detOverlay" role="dialog" aria-modal="true" onclick="closeDetail(event)">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-handle"></div>
+
+    <div class="det-hero" id="detHero">
+      <img id="detPhoto" alt="" style="display:none;width:100%;height:100%;object-fit:cover;position:absolute;inset:0;">
+      <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:56px;color:rgba(253,250,246,.85);" id="detEmoji">🍫</div>
+    </div>
+
+    <div class="det-title" id="detName">—</div>
+    <div class="det-sub" id="detSub">—</div>
+
+    <div class="det-pill-row">
+      <span class="pill"><strong id="detScore">—</strong> /10</span>
+      <span class="pill" id="detMode">—</span>
+      <span class="pill">📍 <span id="detCity">—</span></span>
+      <span class="pill">🗓️ <span id="detDate">—</span></span>
+    </div>
+
+    <div class="field" style="margin-bottom:10px;">
+      <label>Arômes</label>
+      <div id="detAromas" style="display:flex;flex-wrap:wrap;gap:6px;"></div>
+      <div id="detAromasEmpty" style="font-size:12px;color:var(--muted);display:none;">—</div>
+    </div>
+
+    <div class="field" style="margin-bottom:10px;">
+      <label>Notes</label>
+      <div class="det-notes" id="detNotes"><em>—</em></div>
+    </div>
+
+    <div class="det-actions">
+      <a class="btn-ghost" id="detEditLink" href="#" style="text-align:center;">✏️ Modifier</a>
+      <form method="POST" action="/delete" style="flex:1" onsubmit="return confirm('Supprimer cette dégustation ?');">
+        <input type="hidden" name="id" id="detDeleteId">
+        <button type="submit" class="btn-danger">🗑️ Supprimer</button>
+      </form>
+    </div>
+
+    <button type="button" class="btn-cancel" onclick="closeDetailDirect()">Fermer</button>
+  </div>
+</div>
+
+<script>
+function escapeHtml(s){
+  return String(s).replace(/[&<>"']/g,(c)=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+/* Overlay helpers (cohérent avec index) */
+function openOverlay(id){
+  const el = document.getElementById(id);
+  if(!el) return;
+  el.classList.add('open');
+  document.body.classList.add('modal-open');
+}
+function closeOverlay(id){
+  const el = document.getElementById(id);
+  if(!el) return;
+  el.classList.remove('open');
+  document.body.classList.remove('modal-open');
+}
+
+function openDetail(card){
+  const node = card.querySelector('.card-data');
+  if(!node) return;
+  let d; try{ d = JSON.parse(node.textContent); }catch(e){ return; }
+
+  document.getElementById('detName').textContent = d.name||'—';
+  document.getElementById('detSub').textContent = [d.maker,d.city].filter(Boolean).join(' · ')||'—';
+
+  const scoreNum = parseFloat(d.score);
+  const scoreOk = Number.isFinite(scoreNum) && scoreNum > 0;
+  document.getElementById('detScore').textContent = scoreOk ? d.score : '—';
+  const scorePill = document.getElementById('detScore').closest('.pill');
+  if(scorePill) scorePill.style.display = scoreOk ? '' : 'none';
+
+  document.getElementById('detCity').textContent = d.city||'—';
+  document.getElementById('detDate').textContent = d.date||'—';
+  document.getElementById('detMode').textContent = d.mode==='deep'?'🔬 Approfondie':'⚡ Rapide';
+
+  const aWrap = document.getElementById('detAromas');
+  const aEmpty = document.getElementById('detAromasEmpty');
+  aWrap.innerHTML='';
+  if(d.aromas&&d.aromas.length){
+    aEmpty.style.display='none';
+    d.aromas.forEach(a=>{
+      const s=document.createElement('span');
+      s.className='aroma-tag';s.textContent=a;aWrap.appendChild(s);
+    });
+  } else { aEmpty.style.display=''; }
+
+  const notes=(d.notes||'').trim();
+  document.getElementById('detNotes').innerHTML=notes?escapeHtml(notes).replace(/\n/g,'<br>'):'<em>—</em>';
+
+  const img=document.getElementById('detPhoto');
+  const emoji=document.getElementById('detEmoji');
+  if(d.photo_url){img.src=d.photo_url;img.style.display='';emoji.style.display='none';}
+  else{img.style.display='none';emoji.style.display='';}
+
+  document.getElementById('detEditLink').href='/edit?id='+encodeURIComponent(d.id);
+  document.getElementById('detDeleteId').value=d.id;
+
+  openOverlay('detOverlay');
+}
+function closeDetail(e){
+  if(e.target===document.getElementById('detOverlay')) closeDetailDirect();
+}
+function closeDetailDirect(){
+  closeOverlay('detOverlay');
+}
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape'){
+    if(document.getElementById('detOverlay')?.classList.contains('open')) closeDetailDirect();
+  }
+});
+</script>
+
+<!-- Barre navigation mobile — onglet Collections actif -->
+<nav class="bottom-nav">
+  <a class="bottom-nav-item" href="/">
+    <span class="nav-icon">📓</span>
+    <span>Journal</span>
+  </a>
+  <a class="bottom-nav-item" href="/map">
+    <span class="nav-icon">🗺️</span>
+    <span>Carte</span>
+  </a>
+  <a class="bottom-nav-item active" href="/collections">
+    <span class="nav-icon">📁</span>
+    <span>Collections</span>
+  </a>
+  <a class="bottom-nav-item bottom-nav-add" href="/">
+    <span class="nav-icon">＋</span>
+    <span>Ajouter</span>
+  </a>
+</nav>
+
+</body>
+</html>
